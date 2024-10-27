@@ -18,12 +18,12 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(protobuf)
 
 # pybind11
-# FetchContent_Declare(
-#     pybind11
-#     GIT_REPOSITORY https://github.com/pybind/pybind11.git
-#     GIT_TAG a2e59f0e7065404b44dfe92a28aca47ba1378dc4 # v2.13.6
-# )
-# FetchContent_MakeAvailable(pybind11)
+FetchContent_Declare(
+    pybind11
+    GIT_REPOSITORY https://github.com/pybind/pybind11.git
+    GIT_TAG a2e59f0e7065404b44dfe92a28aca47ba1378dc4 # v2.13.6
+)
+FetchContent_MakeAvailable(pybind11)
 
 # generate onnx.proto3.pb.h and onnx.proto3.pb.cc
 if (NOT EXISTS ${onnxinfo_SOURCE_DIR}/third_party/onnx/onnx.proto3)
@@ -38,9 +38,11 @@ add_custom_command(
     COMMAND protobuf::protoc --cpp_out=${onnxinfo_SOURCE_DIR}/third_party/onnx -I${onnxinfo_SOURCE_DIR}/third_party/onnx onnx.proto3
 )
 
+# onnxinfo library for pybind11
 include_directories(
     ${protobuf_SOURCE_DIR}/third_party/abseil-cpp
     ${protobuf_SOURCE_DIR}
+    ${pybind11_SOURCE_DIR}/include
     ${onnxinfo_SOURCE_DIR}/include
     ${onnxinfo_SOURCE_DIR}/third_party/onnx
 )
@@ -50,15 +52,26 @@ link_directories(
     ${protobuf_BINARY_DIR}/third_party/abseil-cpp/absl
 )
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall")
-file(GLOB_RECURSE SOURCES "src/*.cpp")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -fPIC")
+file(GLOB_RECURSE SOURCES "${onnxinfo_SOURCE_DIR}/src/*.cpp")
+list(REMOVE_ITEM SOURCES "${onnxinfo_SOURCE_DIR}/src/main.cpp")
 
-add_executable(
-    ${PROJECT_NAME}
+add_library(
+    ${PROJECT_NAME} STATIC
 
     ${SOURCES}
     ${onnxinfo_SOURCE_DIR}/third_party/onnx/onnx.proto3.pb.cc
 )
 add_dependencies(${PROJECT_NAME} protobuf::protoc)
-
 target_link_libraries(${PROJECT_NAME} protobuf::libprotobuf-lite)
+
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${onnxinfo_SOURCE_DIR}/tests)
+pybind11_add_module(_onnxinfo src/main.cpp)
+target_link_libraries(_onnxinfo PRIVATE ${PROJECT_NAME})
+
+# custom cmake target for test
+# add_custom_target(test ALL)
+# add_custom_command(
+#     TARGET test
+#     COMMAND python3 -m pytest -v
+# )

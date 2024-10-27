@@ -1,6 +1,8 @@
 *.o
+*.so
 build/
 models/
 third_party/
 docker/
+__pycache__/
 tmp.cpp
