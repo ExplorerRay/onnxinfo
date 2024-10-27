@@ -17,6 +17,14 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(protobuf)
 
+# pybind11
+# FetchContent_Declare(
+#     pybind11
+#     GIT_REPOSITORY https://github.com/pybind/pybind11.git
+#     GIT_TAG a2e59f0e7065404b44dfe92a28aca47ba1378dc4 # v2.13.6
+# )
+# FetchContent_MakeAvailable(pybind11)
+
 # generate onnx.proto3.pb.h and onnx.proto3.pb.cc
 if (NOT EXISTS ${onnxinfo_SOURCE_DIR}/third_party/onnx/onnx.proto3)
     file(MAKE_DIRECTORY ${onnxinfo_SOURCE_DIR}/third_party/onnx)
@@ -25,14 +33,16 @@ if (NOT EXISTS ${onnxinfo_SOURCE_DIR}/third_party/onnx/onnx.proto3)
     )
 endif()
 add_custom_command(
-    OUTPUT ${onnxinfo_SOURCE_DIR}/include/onnx.proto3.pb.h
-    COMMAND protobuf::protoc --cpp_out=${onnxinfo_SOURCE_DIR}/include -I${onnxinfo_SOURCE_DIR}/third_party/onnx onnx.proto3
+    OUTPUT ${onnxinfo_SOURCE_DIR}/third_party/onnx/onnx.proto3.pb.h
+           ${onnxinfo_SOURCE_DIR}/third_party/onnx/onnx.proto3.pb.cc
+    COMMAND protobuf::protoc --cpp_out=${onnxinfo_SOURCE_DIR}/third_party/onnx -I${onnxinfo_SOURCE_DIR}/third_party/onnx onnx.proto3
 )
 
 include_directories(
     ${protobuf_SOURCE_DIR}/third_party/abseil-cpp
     ${protobuf_SOURCE_DIR}
     ${onnxinfo_SOURCE_DIR}/include
+    ${onnxinfo_SOURCE_DIR}/third_party/onnx
 )
 
 link_directories(
@@ -40,15 +50,15 @@ link_directories(
     ${protobuf_BINARY_DIR}/third_party/abseil-cpp/absl
 )
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall")
+file(GLOB_RECURSE SOURCES "src/*.cpp")
+
 add_executable(
     ${PROJECT_NAME}
 
-    src/main.cpp
-    ${onnxinfo_SOURCE_DIR}/include/onnx.proto3.pb.cc
-    ${onnxinfo_SOURCE_DIR}/include/onnx.proto3.pb.h
+    ${SOURCES}
+    ${onnxinfo_SOURCE_DIR}/third_party/onnx/onnx.proto3.pb.cc
 )
 add_dependencies(${PROJECT_NAME} protobuf::protoc)
 
 target_link_libraries(${PROJECT_NAME} protobuf::libprotobuf-lite)
-
-# add_subdirectory(third_party/pybind11)
