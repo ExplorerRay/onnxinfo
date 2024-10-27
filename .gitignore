@@ -1,0 +1,6 @@
+*.o
+build/
+models/
+third_party/
+docker/
+tmp.cpp
