@@ -14,3 +14,8 @@ A tool to show ONNX model summary like torchinfo
 
 <!-- ## Test
 `python3 -m pytest -v` -->
+
+## Docker
+* Run `docker build -t onnxinfo -f docker/Dockerfile .` first.
+    * You can type `docker run onnxinfo` to run tests.
+    * Or type `docker run -it onnxinfo bash` to enter the environment which has onnxinfo.
