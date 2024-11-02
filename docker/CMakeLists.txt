@@ -6,24 +6,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(ABSL_PROPAGATE_CXX_STD ON)
 set(protobuf_BUILD_TESTS OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-set(CMAKE_BUILD_TYPE Release)
 
 # protobuf
-include(FetchContent)
-FetchContent_Declare(
-    protobuf
-    GIT_REPOSITORY https://github.com/protocolbuffers/protobuf.git
-    GIT_TAG e6ab258b7ca407ed1bad8a2f04971e72b16f5409 # v28.2
-)
-FetchContent_MakeAvailable(protobuf)
-
-# pybind11
-FetchContent_Declare(
-    pybind11
-    GIT_REPOSITORY https://github.com/pybind/pybind11.git
-    GIT_TAG a2e59f0e7065404b44dfe92a28aca47ba1378dc4 # v2.13.6
-)
-FetchContent_MakeAvailable(pybind11)
+# include(FetchContent)
+# FetchContent_Declare(
+#     protobuf
+#     GIT_REPOSITORY https://github.com/protocolbuffers/protobuf.git
+#     GIT_TAG e6ab258b7ca407ed1bad8a2f04971e72b16f5409 # v28.2
+# )
+# FetchContent_MakeAvailable(protobuf)
 
 # generate onnx.proto3.pb.h and onnx.proto3.pb.cc
 if (NOT EXISTS ${onnxinfo_SOURCE_DIR}/third_party/onnx/onnx.proto3)
@@ -37,6 +28,9 @@ add_custom_command(
            ${onnxinfo_SOURCE_DIR}/third_party/onnx/onnx.proto3.pb.cc
     COMMAND protobuf::protoc --cpp_out=${onnxinfo_SOURCE_DIR}/third_party/onnx -I${onnxinfo_SOURCE_DIR}/third_party/onnx onnx.proto3
 )
+
+# pybind11
+find_package(pybind11 CONFIG)
 
 # start building onnxinfo library for pybind11
 include_directories(

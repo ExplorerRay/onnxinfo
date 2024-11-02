@@ -1,6 +1,9 @@
 *.o
+*.so
 build/
 models/
 third_party/
-docker/
+__pycache__/
+.pytest_cache/
 tmp.cpp
+tmp.py

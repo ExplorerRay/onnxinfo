@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <vector>
+#include <stdexcept>
 #include <cassert>
 #include <iostream>
 #include "onnx.proto3.pb.h"

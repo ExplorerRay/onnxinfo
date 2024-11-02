@@ -6,8 +6,7 @@ onnx::ModelProto read_onnx(const std::string &filename) {
 
   // check file existence
   if(!input.good()) {
-    std::cerr << "File not found: " << filename << '\n';
-    exit(1);
+    throw std::invalid_argument("File not found: " + filename);
   }
 
   std::streamsize size = input.tellg(); // get current position in file for file size
