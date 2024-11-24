@@ -26,7 +26,7 @@ COPY . /onnxinfo
 
 WORKDIR /onnxinfo
 
-RUN cmake --build build/ --parallel 6
+RUN cmake --build build/ --parallel 4
 
 # CMD ["bash"]
 CMD ["python3", "-m", "pytest", "tests/", "-v"]
