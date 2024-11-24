@@ -63,9 +63,10 @@ add_library(
     ${onnxinfo_SOURCE_DIR}/third_party/onnx/onnx.proto3.pb.cc
 )
 add_dependencies(${PROJECT_NAME} protobuf::protoc)
-target_link_libraries(${PROJECT_NAME} protobuf::libprotobuf-lite)
+target_link_libraries(${PROJECT_NAME}
+    protobuf::libprotobuf
+)
 
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${onnxinfo_SOURCE_DIR}/tests)
 pybind11_add_module(_onnxinfo src/main.cpp)
 target_link_libraries(_onnxinfo PRIVATE ${PROJECT_NAME})
 
