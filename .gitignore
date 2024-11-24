@@ -3,7 +3,8 @@
 build/
 models/
 third_party/
-docker/
 __pycache__/
+.pytest_cache/
 tmp.cpp
 tests/tmp.py
+tmp.py
