@@ -6,3 +6,4 @@ third_party/
 docker/
 __pycache__/
 tmp.cpp
+tests/tmp.py

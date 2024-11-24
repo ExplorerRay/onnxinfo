@@ -1,6 +1,6 @@
 #include "utils.hpp"
 
-onnx::ModelProto read_onnx(const std::string &filename) {
+onnx::GraphProto read_onnx(const std::string &filename) {
   // open file and move current position in file to the end
   std::ifstream input(filename, std::ios::ate | std::ios::binary);
 
@@ -18,12 +18,12 @@ onnx::ModelProto read_onnx(const std::string &filename) {
   onnx::ModelProto model;
   model.ParseFromArray(buffer.data(), size); // parse protobuf
 
-  return model;
+  return model.graph();
 }
 
 void iterate_graph(const ::onnx::GraphProto &graph) {
   onnx::NodeProto node;
-  for (int i = 0; i < graph.node_size(); i++) {
+  for (int i = 0; i < graph.node_size(); ++i) {
     std::cout << "node NO." << i << '\n';
     node = graph.node(i);
 

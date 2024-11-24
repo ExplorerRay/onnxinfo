@@ -7,6 +7,6 @@
 #include <iostream>
 #include "onnx.proto3.pb.h"
 
-onnx::ModelProto read_onnx(const std::string &filename);
+onnx::GraphProto read_onnx(const std::string &filename);
 
 void iterate_graph(const ::onnx::GraphProto &graph);
