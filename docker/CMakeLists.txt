@@ -8,27 +8,13 @@ set(protobuf_BUILD_TESTS OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # protobuf
-# include(FetchContent)
-# FetchContent_Declare(
-#     protobuf
-#     GIT_REPOSITORY https://github.com/protocolbuffers/protobuf.git
-#     GIT_TAG e6ab258b7ca407ed1bad8a2f04971e72b16f5409 # v28.2
-# )
-# FetchContent_MakeAvailable(protobuf)
-find_package(protobuf CONFIG REQUIRED)
-
-# generate onnx.proto3.pb.h and onnx.proto3.pb.cc
-if (NOT EXISTS ${onnxinfo_SOURCE_DIR}/third_party/onnx/onnx.proto3)
-    file(MAKE_DIRECTORY ${onnxinfo_SOURCE_DIR}/third_party/onnx)
-    execute_process(
-        COMMAND wget "https://raw.githubusercontent.com/onnx/onnx/main/onnx/onnx.proto3" -O ${onnxinfo_SOURCE_DIR}/third_party/onnx/onnx.proto3
-    )
-endif()
-add_custom_command(
-    OUTPUT ${onnxinfo_SOURCE_DIR}/third_party/onnx/onnx.proto3.pb.h
-           ${onnxinfo_SOURCE_DIR}/third_party/onnx/onnx.proto3.pb.cc
-    COMMAND protobuf::protoc --cpp_out=${onnxinfo_SOURCE_DIR}/third_party/onnx -I${onnxinfo_SOURCE_DIR}/third_party/onnx onnx.proto3
+include(FetchContent)
+FetchContent_Declare(
+    protobuf
+    GIT_REPOSITORY https://github.com/protocolbuffers/protobuf.git
+    GIT_TAG e6ab258b7ca407ed1bad8a2f04971e72b16f5409 # v28.2
 )
+FetchContent_MakeAvailable(protobuf)
 
 # pybind11
 find_package(pybind11 CONFIG)
@@ -57,16 +43,10 @@ add_library(
     ${SOURCES}
     ${onnxinfo_SOURCE_DIR}/third_party/onnx/onnx.proto3.pb.cc
 )
-add_dependencies(${PROJECT_NAME} protobuf::protoc)
-target_link_libraries(${PROJECT_NAME} protobuf::libprotobuf)
+target_link_libraries(${PROJECT_NAME}
+    protobuf::libprotobuf
+)
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${onnxinfo_SOURCE_DIR}/tests)
 pybind11_add_module(_onnxinfo src/main.cpp)
 target_link_libraries(_onnxinfo PRIVATE ${PROJECT_NAME})
-
-# custom cmake target for test
-# add_custom_target(test ALL)
-# add_custom_command(
-#     TARGET test
-#     COMMAND python3 -m pytest -v
-# )
