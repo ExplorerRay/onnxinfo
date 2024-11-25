@@ -1,4 +1,8 @@
 docker/Dockerfile
+docker/original/
 build/
 .git/
 *.md
+models/
+third_party/
+*.so

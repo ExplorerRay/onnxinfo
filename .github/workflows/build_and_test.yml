@@ -1,0 +1,24 @@
+name: Build onnxinfo source code and run tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Build docker image and source code
+      run: |
+        docker build -t onnxinfo -f docker/Dockerfile .
+
+    - name: Run tests (pytest)
+      run: |
+        docker run onnxinfo

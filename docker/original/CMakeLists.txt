@@ -16,6 +16,19 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(protobuf)
 
+# generate onnx.proto3.pb.h and onnx.proto3.pb.cc
+if (NOT EXISTS ${onnxinfo_SOURCE_DIR}/third_party/onnx/onnx.proto3)
+    file(MAKE_DIRECTORY ${onnxinfo_SOURCE_DIR}/third_party/onnx)
+    execute_process(
+        COMMAND wget "https://raw.githubusercontent.com/onnx/onnx/main/onnx/onnx.proto3" -O ${onnxinfo_SOURCE_DIR}/third_party/onnx/onnx.proto3
+    )
+endif()
+add_custom_command(
+    OUTPUT ${onnxinfo_SOURCE_DIR}/third_party/onnx/onnx.proto3.pb.h
+           ${onnxinfo_SOURCE_DIR}/third_party/onnx/onnx.proto3.pb.cc
+    COMMAND protobuf::protoc --cpp_out=${onnxinfo_SOURCE_DIR}/third_party/onnx -I${onnxinfo_SOURCE_DIR}/third_party/onnx onnx.proto3
+)
+
 # pybind11
 find_package(pybind11 CONFIG)
 
@@ -43,10 +56,9 @@ add_library(
     ${SOURCES}
     ${onnxinfo_SOURCE_DIR}/third_party/onnx/onnx.proto3.pb.cc
 )
-target_link_libraries(${PROJECT_NAME}
-    protobuf::libprotobuf
-)
+add_dependencies(${PROJECT_NAME} protobuf::protoc)
+target_link_libraries(${PROJECT_NAME} protobuf::libprotobuf)
 
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${onnxinfo_SOURCE_DIR}/tests)
-pybind11_add_module(_onnxinfo src/main.cpp)
-target_link_libraries(_onnxinfo PRIVATE ${PROJECT_NAME})
+# set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${onnxinfo_SOURCE_DIR}/tests)
+# pybind11_add_module(_onnxinfo src/main.cpp)
+# target_link_libraries(_onnxinfo PRIVATE ${PROJECT_NAME})

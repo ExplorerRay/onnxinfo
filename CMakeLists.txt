@@ -7,6 +7,7 @@ set(ABSL_PROPAGATE_CXX_STD ON)
 set(protobuf_BUILD_TESTS OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${onnxinfo_SOURCE_DIR}/tests)
 
 # protobuf
 include(FetchContent)

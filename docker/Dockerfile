@@ -1,32 +1,16 @@
-# FROM debian:12-slim
-
-# RUN apt-get update \
-#  && DEBIAN_FRONTEND=noninteractive apt-get install -y \
-#  	build-essential cmake pybind11-dev python3.11-dev \
-# 	git python3.11 python3-pytest \
-#  && apt-get clean autoclean \
-#  && apt-get autoremove --yes \
-#  && rm -rf /var/lib/apt/lists/*
-
-# RUN mkdir /onnxinfo
-
-# COPY docker/CMakeLists.txt /onnxinfo
-
-# WORKDIR /onnxinfo
-
-# RUN cmake -S . -B build/
-#  && cmake --build build/ --parallel 6
-
-# CMD ["bash"]
-### original Dockerfile for explorerray/onnxinfo:latest
-
 FROM explorerray/onnxinfo:latest
 
 COPY . /onnxinfo
 
 WORKDIR /onnxinfo
 
-RUN cmake --build build/ --parallel 6
+RUN wget "https://raw.githubusercontent.com/onnx/onnx/main/onnx/onnx.proto3" -O ./third_party/onnx/onnx.proto3
+
+RUN mkdir models \
+ && wget "https://github.com/onnx/models/raw/refs/heads/main/Computer_Vision/resnet18_Opset16_timm/resnet18_Opset16.onnx" -O ./models/resnet18_Opset16.onnx
+
+RUN mv docker/CMakeLists.txt . \
+ && cmake --build build/ --parallel 4
 
 # CMD ["bash"]
 CMD ["python3", "-m", "pytest", "tests/", "-v"]
