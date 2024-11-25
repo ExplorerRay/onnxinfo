@@ -12,8 +12,10 @@ A tool to show ONNX model summary like torchinfo
 3. `cmake -S . -B build/`
 4. `cmake --build build/ [--parallel <thread number>]` to build dependency and onnxinfo
 
-<!-- ## Test
-`python3 -m pytest -v` -->
+## Test
+`python3 -m pytest -v`
+
+Use model from [ONNX Model Zoo](https://github.com/onnx/models/tree/main) to test.
 
 ## Docker
 * Run `docker build -t onnxinfo -f docker/Dockerfile .` first.
