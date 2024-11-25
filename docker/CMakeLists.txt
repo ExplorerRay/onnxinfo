@@ -15,6 +15,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 #     GIT_TAG e6ab258b7ca407ed1bad8a2f04971e72b16f5409 # v28.2
 # )
 # FetchContent_MakeAvailable(protobuf)
+find_package(protobuf CONFIG REQUIRED)
 
 # generate onnx.proto3.pb.h and onnx.proto3.pb.cc
 if (NOT EXISTS ${onnxinfo_SOURCE_DIR}/third_party/onnx/onnx.proto3)
@@ -57,7 +58,7 @@ add_library(
     ${onnxinfo_SOURCE_DIR}/third_party/onnx/onnx.proto3.pb.cc
 )
 add_dependencies(${PROJECT_NAME} protobuf::protoc)
-target_link_libraries(${PROJECT_NAME} protobuf::libprotobuf-lite)
+target_link_libraries(${PROJECT_NAME} protobuf::libprotobuf)
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${onnxinfo_SOURCE_DIR}/tests)
 pybind11_add_module(_onnxinfo src/main.cpp)
