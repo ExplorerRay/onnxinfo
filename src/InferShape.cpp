@@ -57,8 +57,25 @@ void InferShapeImpl::print_summary() {
 }
 
 void InferShapeImpl::infer_shapes_Conv(onnx::NodeProto &node) {
-    // get attributes (kernel_shape, strides, pads, dilations, group)
     struct AttrInfo_Conv attr_info;
+
+    // get node input shapes
+    std::vector<std::vector<int64_t>> input_shapes;
+    for (int i = 0; i < node.input_size(); ++i) {
+        auto ndinput = node.input(i);
+        if (this->get_ndname_to_shape().find(ndinput) == this->get_ndname_to_shape().end()) {
+            std::cerr << "Error: " << ndinput << " not found in ndname_to_shape\n";
+            exit(1);
+        }
+        else {
+            // get shape from ndname_to_shape
+            std::vector<int64_t> shape = this->get_ndname_to_shape()[ndinput];
+            if (i == 0) attr_info.set_default_attr(shape.size());
+            input_shapes.emplace_back(shape);
+        }
+    }
+
+    // get attributes (kernel_shape, strides, pads, dilations, group)
     for (auto attr : node.attribute()) {
         if (attr.name() == "kernel_shape") {
             for (int i = 0; i < attr.ints_size(); ++i) {
@@ -85,29 +102,15 @@ void InferShapeImpl::infer_shapes_Conv(onnx::NodeProto &node) {
         }
     }
 
-    // get node input shapes
-    std::vector<std::vector<int64_t>> input_shapes;
-    for (auto ndinput : node.input()) {
-        if (this->get_ndname_to_shape().find(ndinput) == this->get_ndname_to_shape().end()) {
-            std::cerr << "Error: " << ndinput << " not found in ndname_to_shape\n";
-            return;
-            exit(1);
-        }
-        else {
-            // get shape from ndname_to_shape
-            input_shapes.emplace_back(this->get_ndname_to_shape()[ndinput]);
-        }
-    }
-
     // calculate output shape after convolution
     auto input_shape = input_shapes[0];
     auto weight_shape = input_shapes[1];
-    std::vector<int64_t> output_shape = {
-        input_shape[0], // batch size
-        weight_shape[0], // number of channels
-        (input_shape[2] + 2 * attr_info.pads[0] - attr_info.dilations[0] * (weight_shape[2] - 1) - 1) / attr_info.strides[0] + 1, // height
-        (input_shape[3] + 2 * attr_info.pads[1] - attr_info.dilations[1] * (weight_shape[3] - 1) - 1) / attr_info.strides[1] + 1 // width
-    };
+    std::vector<int64_t> output_shape;
+    output_shape.emplace_back(input_shape[0]); // batch size
+    output_shape.emplace_back(weight_shape[0]); // number of channels
+    for (size_t i = 0; i < attr_info.kernel_shape.size(); ++i) {
+        output_shape.emplace_back((input_shape[i + 2] + 2 * attr_info.pads[i] - attr_info.dilations[i] * (attr_info.kernel_shape[i] - 1) - 1) / attr_info.strides[i] + 1);
+    }
 
     // set value_info and update ndname_to_shape
     onnx::ValueInfoProto *val_info = this->graph.add_value_info();
@@ -141,6 +144,10 @@ void InferShapeImpl::infer_shapes_Relu(onnx::NodeProto &node) {
 
 void InferShapeImpl::infer_shapes_MaxPool(onnx::NodeProto &node) {
     struct AttrInfo_MaxPool attr_info;
+
+    auto input_shape = this->get_ndname_to_shape()[node.input(0)];
+
+    attr_info.set_default_attr(input_shape.size());
     for (auto attr : node.attribute()) {
         // std::cout << "attr name: " << attr.name() << '\n';
         if (attr.name() == "kernel_shape") { // required
@@ -162,7 +169,6 @@ void InferShapeImpl::infer_shapes_MaxPool(onnx::NodeProto &node) {
         }
         else if (attr.name() == "ceil_mode") {
             attr_info.ceil_mode = attr.i();
-            // std::cout << "ceil_mode: " << attr_info.ceil_mode << '\n';
         }
         else if (attr.name() == "dilations") {
             attr_info.dilations.clear();
@@ -173,13 +179,12 @@ void InferShapeImpl::infer_shapes_MaxPool(onnx::NodeProto &node) {
     }
 
     // calculate output shape after maxpool
-    auto input_shape = this->get_ndname_to_shape()[node.input(0)];
-    std::vector<int64_t> output_shape = {
-        input_shape[0], // batch size
-        input_shape[1], // number of channels
-        (input_shape[2] + 2 * attr_info.pads[0] - attr_info.dilations[0] * (attr_info.kernel_shape[0] - 1) - 1) / attr_info.strides[0] + 1, // height
-        (input_shape[3] + 2 * attr_info.pads[1] - attr_info.dilations[1] * (attr_info.kernel_shape[1] - 1) - 1) / attr_info.strides[1] + 1 // width
-    };
+    std::vector<int64_t> output_shape;
+    output_shape.emplace_back(input_shape[0]); // batch size
+    output_shape.emplace_back(input_shape[1]); // number of channels
+    for (size_t i = 0; i < attr_info.kernel_shape.size(); ++i) {
+        output_shape.emplace_back((input_shape[i + 2] + 2 * attr_info.pads[i] - attr_info.dilations[i] * (attr_info.kernel_shape[i] - 1) - 1) / attr_info.strides[i] + 1);
+    }
 
     // set value_info and update ndname_to_shape
     onnx::ValueInfoProto *val_info = this->graph.add_value_info();
@@ -228,10 +233,11 @@ void InferShapeImpl::infer_shapes_GlobalAveragePool(onnx::NodeProto &node) {
     // calculate output shape after globalaveragepool
     std::vector<int64_t> output_shape = {
         input_shapes[0][0], // batch size
-        input_shapes[0][1], // number of channels
-        1, // height
-        1 // width
+        input_shapes[0][1] // number of channels
     };
+    for (size_t i = 2; i < input_shapes[0].size(); ++i) {
+        output_shape.emplace_back(1);
+    }
 
     // set value_info and update ndname_to_shape
     onnx::ValueInfoProto *val_info = this->graph.add_value_info();
@@ -242,11 +248,7 @@ void InferShapeImpl::infer_shapes_GlobalAveragePool(onnx::NodeProto &node) {
 }
 
 void InferShapeImpl::infer_shapes_Flatten(onnx::NodeProto &node) {
-    // for (auto attr : node.attribute()) {
-    //     if (attr.name() == "axis") {
-    //         std::cout << "axis: " << attr.i() << '\n';
-    //     }
-    // }
+    // attribute axis is not used now
 
     // get node input shapes
     std::vector<std::vector<int64_t>> input_shapes;
@@ -302,7 +304,7 @@ void InferShapeImpl::infer_shapes_Gemm(onnx::NodeProto &node) {
         }
     }
 
-    // get node input shapes
+    // get node input shapes (A and B)
     std::vector<std::vector<int64_t>> input_shapes;
     for (size_t num = 0; num < 2; ++num) {
         auto ndinput = node.input(num);
@@ -367,7 +369,7 @@ void InferShapeImpl::infer_shapes() {
         }
         else {
             std::cerr << "Error: " << node.op_type() << " not supported now\n";
-            return;
+            exit(1);
         }
     }
 }
