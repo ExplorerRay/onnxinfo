@@ -9,9 +9,19 @@ def test_read_onnx():
     info = _onnxinfo.read_onnx('models/resnet18_Opset16.onnx')
     assert info is not None
 
-def test_iterate_onnx():
+def test_infer_shape():
+    model = _onnxinfo.read_onnx('models/resnet18_Opset16.onnx')
+    target = _onnxinfo.InferShapeImpl(model.graph())
+    old_size = len(target.get_ndname_to_shape())
+    target.infer_shapes()
+    new_size = len(target.get_ndname_to_shape())
+    assert new_size > old_size
+
+def test_print_summary():
     try:
-        graph = _onnxinfo.read_onnx('models/resnet18_Opset16.onnx')
-        _onnxinfo.iterate_graph(graph)
+        model = _onnxinfo.read_onnx('models/resnet18_Opset16.onnx')
+        target = _onnxinfo.InferShapeImpl(model.graph())
+        target.infer_shapes()
+        target.print_summary()
     except:
         pytest.fail("iterate_graph failed")
