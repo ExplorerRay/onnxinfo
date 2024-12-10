@@ -1,29 +1,24 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include "utils.hpp"
+#include "InferShape.hpp"
 
-int main(int argc, char **argv) {
-  if (argc != 2) {
-    std::cerr << "Usage: " << argv[0] << " <onnx-model-path>\n";
-    return 1;
-  }
-
-  // onnx::ModelProto model = read_onnx(argv[1]);
-  // onnx::GraphProto graph = model.graph();
-  // iterate_graph(graph);
-  iterate_graph(read_onnx(argv[1]));
-
-  return 0;
-}
+namespace py = pybind11;
 
 PYBIND11_MODULE(_onnxinfo, m) {
   m.doc() = "pybind11 onnxinfo module"; // optional module docstring
 
   m.def("read_onnx", &read_onnx, "A C++ function that read ONNX model");
-  m.def("iterate_graph", &iterate_graph, "A C++ function that iterate ONNX graph");
+  // m.def("iterate_graph", &iterate_graph, "A C++ function that iterate ONNX graph");
 
-  // pybind11::class_<onnx::ModelProto>(m, "ModelProto")
-  //   .def(pybind11::init())
-  //   .def_readonly("graph", &onnx::ModelProto::graph);
-  pybind11::class_<onnx::GraphProto>(m, "GraphProto");
+  py::class_<InferShapeImpl>(m, "InferShapeImpl")
+    .def(py::init<const onnx::GraphProto &>())
+    .def("set_io_iniz_shape_to_map", &InferShapeImpl::set_io_iniz_shape_to_map)
+    .def("infer_shapes", &InferShapeImpl::infer_shapes)
+    .def("print_summary", &InferShapeImpl::print_summary)
+    .def("get_ndname_to_shape", &InferShapeImpl::get_ndname_to_shape);
+
+  py::class_<onnx::ModelProto>(m, "ModelProto")
+    .def("graph", &onnx::ModelProto::graph);
+  py::class_<onnx::GraphProto>(m, "GraphProto");
 }

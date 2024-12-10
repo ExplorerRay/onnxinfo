@@ -15,7 +15,7 @@ A tool to show ONNX model summary like torchinfo
 ## Test
 `python3 -m pytest -v`
 
-Use model from [ONNX Model Zoo](https://github.com/onnx/models/tree/main) to test.
+Use model(resnet18_Opset16.onnx) from [ONNX Model Zoo](https://github.com/onnx/models/tree/main) to test.
 
 ## Docker
 * Run `docker build -t onnxinfo -f docker/Dockerfile .` first.
