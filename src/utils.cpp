@@ -34,26 +34,6 @@ void print_dim(const ::onnx::TensorShapeProto_Dimension &dim) {
   }
 }
 
-void print_val_info(const ::onnx::ValueInfoProto &info) {
-  auto shape = info.type().tensor_type().shape();
-  std::cout << info.name() << "\t";
-  // print input shape
-  // NOT YET
-  std::cout << "\t";
-
-  // print output shape
-  std::cout << "[";
-  if (shape.dim_size() != 0) {
-    int size = shape.dim_size();
-    for (int i = 0; i < size - 1; ++i) {
-      print_dim(shape.dim(i));
-      std::cout << ", ";
-    }
-    print_dim(shape.dim(size - 1));
-  }
-  std::cout << "]\n";
-}
-
 void print_dims_vec(const std::vector<int64_t> &dims) {
     std::cout << "[";
     for (size_t i = 0; i < dims.size() - 1; ++i) {
@@ -81,11 +61,20 @@ void set_vec_to_shape(onnx::ValueInfoProto *val_info, const std::vector<int64_t>
 }
 
 std::string string_trimmer(const std::string &inputString, const size_t maxLen) {
-    std::string trimmedString = inputString;
+  std::string trimmedString = inputString;
 
-    if (trimmedString.length() > maxLen) {
-        trimmedString = trimmedString.substr(0, maxLen - 3) + "...";
-    }
+  if (trimmedString.length() > maxLen) {
+      trimmedString = trimmedString.substr(0, maxLen - 3) + "...";
+  }
 
-    return trimmedString;
+  return trimmedString;
+}
+
+std::string int64_to_str(int64_t num) {
+  std::string str = std::to_string(num);
+  // add comma
+  for (int i = str.length() - 3; i > 0; i -= 3) {
+    str.insert(i, ",");
+  }
+  return str;
 }

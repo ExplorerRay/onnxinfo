@@ -12,6 +12,23 @@ A tool to show ONNX model summary like torchinfo
 3. `cmake -S . -B build/`
 4. `cmake --build build/ [--parallel <thread number>]` to build dependency and onnxinfo
 
+## Usage
+### Shape Inference
+Support node types so far: Conv, Relu, MaxPool, Add, GlobalAveragePool, Flatten, Gemm
+
+### Static Analysis
+Will be run when shape inferencing by default.
+You can use `infer_shapes(analyze = false)` to run shape inference only.
+
+#### MACs
+Doesn't count for non MACs operations like `Relu`, `MaxPool` and so on.
+
+#### Parameters
+Calculate trainable parameters for each node.
+
+#### Memory
+Calculate the memory usage of each node when input and output. (Bytes)
+
 ## Test
 `python3 -m pytest -v`
 
