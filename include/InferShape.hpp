@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include "onnx.proto3.pb.h"
 #include "AttrInfo.hpp"
+#include "ModelAnalysis.hpp"
 
 #define INDENT 30
 
@@ -13,19 +14,22 @@ public:
 
     ~InferShapeImpl() = default;
 
-    void set_io_iniz_shape_to_map();
+    void set_io_iniz_shape_to_map(bool analyze);
+    void infer_shapes(bool analyze = true);
     void infer_shapes();
     void print_summary();
 
-    std::unordered_map<std::string, std::vector<int64_t>> get_ndname_to_shape() {
+    const std::unordered_map<std::string, std::vector<int64_t>> get_ndname_to_shape() {
         return this->ndname_to_shape;
     }
 
 private:
     onnx::GraphProto graph;
     std::unordered_map<std::string, std::vector<int64_t>> ndname_to_shape;
+    std::unordered_map<std::string, struct AnalyzeData> ndname_to_anal_data;
+    std::unordered_map<std::string, size_t> ndname_to_dtype_size;
 
-    // TODO: check dimensions & attributes needed or default
+    // TODO: more op types
     void infer_shapes_Conv(onnx::NodeProto &node);
     void infer_shapes_Relu(onnx::NodeProto &node);
     void infer_shapes_MaxPool(onnx::NodeProto &node);

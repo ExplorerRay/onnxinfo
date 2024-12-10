@@ -2,9 +2,8 @@
 #include <iomanip>
 #include "InferShape.hpp"
 #include "utils.hpp"
-#include "AttrInfo.hpp"
 
-void InferShapeImpl::set_io_iniz_shape_to_map() {
+void InferShapeImpl::set_io_iniz_shape_to_map(bool analyze) {
     for (auto input : this->graph.input()) {
         auto shape = input.type().tensor_type().shape();
         std::vector<int64_t> shape_vec = {};
@@ -15,6 +14,13 @@ void InferShapeImpl::set_io_iniz_shape_to_map() {
             }
         }
         this->ndname_to_shape[input.name()] = shape_vec;
+
+        // get dtype size
+        if (analyze) {
+            if (input.type().tensor_type().elem_type() == 1) { // float32
+                this->ndname_to_dtype_size[input.name()] = 4;
+            }
+        }
     }
 
     for (auto initializer : this->graph.initializer()) {
@@ -24,6 +30,13 @@ void InferShapeImpl::set_io_iniz_shape_to_map() {
             shape_vec.emplace_back(shape.Get(i));
         }
         this->ndname_to_shape[initializer.name()] = shape_vec;
+
+        // get dtype size
+        if (analyze) {
+            if (initializer.data_type() == 1) {
+                this->ndname_to_dtype_size[initializer.name()] = 4;
+            }
+        }
     }
 
     for (auto output : this->graph.output()) {
@@ -36,22 +49,69 @@ void InferShapeImpl::set_io_iniz_shape_to_map() {
             }
         }
         this->ndname_to_shape[output.name()] = shape_vec;
+
+        // get dtype size
+        if (analyze) {
+            if (output.type().tensor_type().elem_type() == 1) {
+                this->ndname_to_dtype_size[output.name()] = 4;
+            }
+        }
     }
 }
 
 void InferShapeImpl::print_summary() {
-    std::cout << std::left << std::setw(INDENT) << "Name"
-              << std::left << std::setw(INDENT) << "Type"
-              << std::left << std::setw(INDENT) << "Input Shape"
-              << std::left << std::setw(INDENT) << "Output Shape" << '\n';
-    std::cout << std::string(INDENT * 4, '-') << '\n';
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(0);
 
-    for (auto node : graph.node()) {
-        std::cout << std::left << std::setw(INDENT) << string_trimmer(node.name(), INDENT-5);
+    if (this->ndname_to_anal_data.empty()) {
+        std::cout << std::left << std::setw(INDENT) << "Name"
+                << std::left << std::setw(INDENT) << "Type"
+                << std::left << std::setw(INDENT) << "Input Shape"
+                << std::left << std::setw(INDENT) << "Output Shape" << '\n';
+        std::cout << std::string(INDENT * 4, '-') << '\n';
 
-        std::cout << std::left << std::setw(INDENT) << node.op_type();
-        std::cout << std::setw(INDENT) << dims_vec_to_str(this->get_ndname_to_shape()[node.input(0)]);
-        std::cout << std::setw(INDENT) << dims_vec_to_str(this->get_ndname_to_shape()[node.output(0)]);
+        for (auto node : graph.node()) {
+            std::cout << std::left << std::setw(INDENT) << string_trimmer(node.name(), INDENT-5);
+
+            std::cout << std::left << std::setw(INDENT) << node.op_type();
+            std::cout << std::setw(INDENT) << dims_vec_to_str(this->ndname_to_shape[node.input(0)]);
+            std::cout << std::setw(INDENT) << dims_vec_to_str(this->ndname_to_shape[node.output(0)]);
+            std::cout << '\n';
+        }
+    }
+    else {
+        std::cout << std::left << std::setw(INDENT) << "Name"
+                << std::left << std::setw(INDENT) << "Type"
+                << std::left << std::setw(INDENT) << "Input Shape"
+                << std::left << std::setw(INDENT) << "Output Shape"
+                << std::left << std::setw(INDENT) << "MACs"
+                << std::left << std::setw(INDENT) << "Params"
+                << std::left << std::setw(INDENT) << "Memory" << '\n';
+        std::cout << std::string(INDENT * 7, '-') << '\n';
+
+        AnalyzeData total_data;
+        for (auto node : graph.node()) {
+            total_data.mac += this->ndname_to_anal_data[node.name()].mac;
+            total_data.param += this->ndname_to_anal_data[node.name()].param;
+            total_data.mem += this->ndname_to_anal_data[node.name()].mem;
+
+            std::cout << std::left << std::setw(INDENT) << string_trimmer(node.name(), INDENT-5);
+
+            std::cout << std::left << std::setw(INDENT) << node.op_type();
+            std::cout << std::setw(INDENT) << dims_vec_to_str(this->ndname_to_shape[node.input(0)]);
+            std::cout << std::setw(INDENT) << dims_vec_to_str(this->ndname_to_shape[node.output(0)]);
+            std::cout << std::setw(INDENT) << int64_to_str(this->ndname_to_anal_data[node.name()].mac);
+            std::cout << std::setw(INDENT) << int64_to_str(this->ndname_to_anal_data[node.name()].param);
+            std::cout << std::setw(INDENT) << int64_to_str(this->ndname_to_anal_data[node.name()].mem);
+            std::cout << '\n';
+        }
+        std::cout << std::left << std::setw(INDENT) << "Total";
+        std::cout << std::left << std::setw(INDENT) << "-";
+        std::cout << std::setw(INDENT) << dims_vec_to_str(this->ndname_to_shape[graph.input(0).name()]);
+        std::cout << std::setw(INDENT) << dims_vec_to_str(this->ndname_to_shape[graph.output(0).name()]);
+        std::cout << std::setw(INDENT) << int64_to_str(total_data.mac);
+        std::cout << std::setw(INDENT) << int64_to_str(total_data.param);
+        std::cout << std::setw(INDENT) << int64_to_str(total_data.mem);
         std::cout << '\n';
     }
 }
@@ -63,13 +123,13 @@ void InferShapeImpl::infer_shapes_Conv(onnx::NodeProto &node) {
     std::vector<std::vector<int64_t>> input_shapes;
     for (int i = 0; i < node.input_size(); ++i) {
         auto ndinput = node.input(i);
-        if (this->get_ndname_to_shape().find(ndinput) == this->get_ndname_to_shape().end()) {
+        if (this->ndname_to_shape.find(ndinput) == this->ndname_to_shape.end()) {
             std::cerr << "Error: " << ndinput << " not found in ndname_to_shape\n";
             exit(1);
         }
         else {
             // get shape from ndname_to_shape
-            std::vector<int64_t> shape = this->get_ndname_to_shape()[ndinput];
+            std::vector<int64_t> shape = this->ndname_to_shape[ndinput];
             if (i == 0) attr_info.set_default_attr(shape.size());
             input_shapes.emplace_back(shape);
         }
@@ -118,19 +178,20 @@ void InferShapeImpl::infer_shapes_Conv(onnx::NodeProto &node) {
     set_vec_to_shape(val_info, output_shape);
 
     this->ndname_to_shape[node.output(0)] = output_shape;
+    this->ndname_to_dtype_size[node.output(0)] = this->ndname_to_dtype_size[node.input(0)];
 }
 
 void InferShapeImpl::infer_shapes_Relu(onnx::NodeProto &node) {
     // get node input shapes
     std::vector<std::vector<int64_t>> input_shapes;
     for (auto ndinput : node.input()) {
-        if (this->get_ndname_to_shape().find(ndinput) == this->get_ndname_to_shape().end()) {
+        if (this->ndname_to_shape.find(ndinput) == this->ndname_to_shape.end()) {
             std::cerr << "Error: " << ndinput << " not found in ndname_to_shape\n";
             return;
         }
         else {
             // get shape from ndname_to_shape
-            input_shapes.emplace_back(this->get_ndname_to_shape()[ndinput]);
+            input_shapes.emplace_back(this->ndname_to_shape[ndinput]);
         }
     }
 
@@ -140,12 +201,13 @@ void InferShapeImpl::infer_shapes_Relu(onnx::NodeProto &node) {
     set_vec_to_shape(val_info, input_shapes[0]);
 
     this->ndname_to_shape[node.output(0)] = input_shapes[0];
+    this->ndname_to_dtype_size[node.output(0)] = this->ndname_to_dtype_size[node.input(0)];
 }
 
 void InferShapeImpl::infer_shapes_MaxPool(onnx::NodeProto &node) {
     struct AttrInfo_MaxPool attr_info;
 
-    auto input_shape = this->get_ndname_to_shape()[node.input(0)];
+    auto input_shape = this->ndname_to_shape[node.input(0)];
 
     attr_info.set_default_attr(input_shape.size());
     for (auto attr : node.attribute()) {
@@ -192,19 +254,20 @@ void InferShapeImpl::infer_shapes_MaxPool(onnx::NodeProto &node) {
     set_vec_to_shape(val_info, output_shape);
 
     this->ndname_to_shape[node.output(0)] = output_shape;
+    this->ndname_to_dtype_size[node.output(0)] = this->ndname_to_dtype_size[node.input(0)];
 }
 
 void InferShapeImpl::infer_shapes_Add(onnx::NodeProto &node) {
     // get node input shapes
     std::vector<std::vector<int64_t>> input_shapes;
     for (auto ndinput : node.input()) {
-        if (this->get_ndname_to_shape().find(ndinput) == this->get_ndname_to_shape().end()) {
+        if (this->ndname_to_shape.find(ndinput) == this->ndname_to_shape.end()) {
             std::cerr << "Error: " << ndinput << " not found in ndname_to_shape\n";
             return;
         }
         else {
             // get shape from ndname_to_shape
-            input_shapes.emplace_back(this->get_ndname_to_shape()[ndinput]);
+            input_shapes.emplace_back(this->ndname_to_shape[ndinput]);
         }
     }
 
@@ -214,19 +277,20 @@ void InferShapeImpl::infer_shapes_Add(onnx::NodeProto &node) {
     set_vec_to_shape(val_info, input_shapes[0]);
 
     this->ndname_to_shape[node.output(0)] = input_shapes[0];
+    this->ndname_to_dtype_size[node.output(0)] = this->ndname_to_dtype_size[node.input(0)];
 }
 
 void InferShapeImpl::infer_shapes_GlobalAveragePool(onnx::NodeProto &node) {
     // get node input shapes
     std::vector<std::vector<int64_t>> input_shapes;
     for (auto ndinput : node.input()) {
-        if (this->get_ndname_to_shape().find(ndinput) == this->get_ndname_to_shape().end()) {
+        if (this->ndname_to_shape.find(ndinput) == this->ndname_to_shape.end()) {
             std::cerr << "Error: " << ndinput << " not found in ndname_to_shape\n";
             return;
         }
         else {
             // get shape from ndname_to_shape
-            input_shapes.emplace_back(this->get_ndname_to_shape()[ndinput]);
+            input_shapes.emplace_back(this->ndname_to_shape[ndinput]);
         }
     }
 
@@ -245,6 +309,7 @@ void InferShapeImpl::infer_shapes_GlobalAveragePool(onnx::NodeProto &node) {
     set_vec_to_shape(val_info, output_shape);
 
     this->ndname_to_shape[node.output(0)] = output_shape;
+    this->ndname_to_dtype_size[node.output(0)] = this->ndname_to_dtype_size[node.input(0)];
 }
 
 void InferShapeImpl::infer_shapes_Flatten(onnx::NodeProto &node) {
@@ -253,13 +318,13 @@ void InferShapeImpl::infer_shapes_Flatten(onnx::NodeProto &node) {
     // get node input shapes
     std::vector<std::vector<int64_t>> input_shapes;
     for (auto ndinput : node.input()) {
-        if (this->get_ndname_to_shape().find(ndinput) == this->get_ndname_to_shape().end()) {
+        if (this->ndname_to_shape.find(ndinput) == this->ndname_to_shape.end()) {
             std::cerr << "Error: " << ndinput << " not found in ndname_to_shape\n";
             return;
         }
         else {
             // get shape from ndname_to_shape
-            input_shapes.emplace_back(this->get_ndname_to_shape()[ndinput]);
+            input_shapes.emplace_back(this->ndname_to_shape[ndinput]);
         }
     }
 
@@ -290,6 +355,7 @@ void InferShapeImpl::infer_shapes_Flatten(onnx::NodeProto &node) {
     set_vec_to_shape(val_info, output_shape);
 
     this->ndname_to_shape[node.output(0)] = output_shape;
+    this->ndname_to_dtype_size[node.output(0)] = this->ndname_to_dtype_size[node.input(0)];
 }
 
 void InferShapeImpl::infer_shapes_Gemm(onnx::NodeProto &node) {
@@ -308,13 +374,13 @@ void InferShapeImpl::infer_shapes_Gemm(onnx::NodeProto &node) {
     std::vector<std::vector<int64_t>> input_shapes;
     for (size_t num = 0; num < 2; ++num) {
         auto ndinput = node.input(num);
-        if (this->get_ndname_to_shape().find(ndinput) == this->get_ndname_to_shape().end()) {
+        if (this->ndname_to_shape.find(ndinput) == this->ndname_to_shape.end()) {
             std::cerr << "Error: " << ndinput << " not found in ndname_to_shape\n";
             return;
         }
         else {
             // get shape from ndname_to_shape
-            input_shapes.emplace_back(this->get_ndname_to_shape()[ndinput]);
+            input_shapes.emplace_back(this->ndname_to_shape[ndinput]);
             if (num == 0 && attr_info.transA) {
                 std::reverse(input_shapes[num].begin(), input_shapes[num].end());
             }
@@ -338,14 +404,14 @@ void InferShapeImpl::infer_shapes_Gemm(onnx::NodeProto &node) {
     set_vec_to_shape(val_info, output_shape);
 
     this->ndname_to_shape[node.output(0)] = output_shape;
+    this->ndname_to_dtype_size[node.output(0)] = this->ndname_to_dtype_size[node.input(0)];
 }
 
-void InferShapeImpl::infer_shapes() {
-    this->set_io_iniz_shape_to_map();
+void InferShapeImpl::infer_shapes(bool analyze) {
+    this->set_io_iniz_shape_to_map(analyze);
 
     // infer shape for each node and store to value_info
     for (auto node : graph.node()) {
-        // std::cout << "Node: " << node.name() << '\n';
         if (node.op_type() == "Conv") {
             this->infer_shapes_Conv(node);
         }
@@ -371,5 +437,15 @@ void InferShapeImpl::infer_shapes() {
             std::cerr << "Error: " << node.op_type() << " not supported now\n";
             exit(1);
         }
+
+        if (analyze) {
+            // analyze node and store to ndname_to_anal_data
+            this->ndname_to_anal_data[node.name()] =
+                analyze_node(node, this->ndname_to_shape, this->ndname_to_dtype_size);
+        }
     }
+}
+
+void InferShapeImpl::infer_shapes() {
+    this->infer_shapes(true);
 }

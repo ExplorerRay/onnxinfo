@@ -14,7 +14,7 @@ PYBIND11_MODULE(_onnxinfo, m) {
   py::class_<InferShapeImpl>(m, "InferShapeImpl")
     .def(py::init<const onnx::GraphProto &>())
     .def("set_io_iniz_shape_to_map", &InferShapeImpl::set_io_iniz_shape_to_map)
-    .def("infer_shapes", &InferShapeImpl::infer_shapes)
+    .def("infer_shapes", py::overload_cast<>(&InferShapeImpl::infer_shapes))
     .def("print_summary", &InferShapeImpl::print_summary)
     .def("get_ndname_to_shape", &InferShapeImpl::get_ndname_to_shape);
 
