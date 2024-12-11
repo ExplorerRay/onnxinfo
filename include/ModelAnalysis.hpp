@@ -13,7 +13,14 @@ struct AnalyzeData {
   int64_t mem = 0;
 };
 
+struct NodeAnalArgs {
+  std::vector<std::vector<int64_t>> input_shapes;
+  std::vector<int64_t> output_shape;
+  std::unordered_map<std::string, size_t> ndname_to_size;
+};
+
 int64_t get_prod(std::vector<int64_t> &vec);
+NodeAnalArgs get_anal_args(onnx::NodeProto &node, const std::unordered_map<std::string, std::vector<int64_t>> &ndname_to_shape, const std::unordered_map<std::string, size_t> &ndname_to_dtype_size);
 
 AnalyzeData analyze_node_Conv(onnx::NodeProto &node, std::vector<std::vector<int64_t>> &input_shapes, std::vector<int64_t> &output_shape, std::unordered_map<std::string, size_t> &ndname_to_size);
 AnalyzeData analyze_node_Relu(onnx::NodeProto &node, std::vector<std::vector<int64_t>> &input_shapes, std::vector<int64_t> &output_shape, std::unordered_map<std::string, size_t> &ndname_to_size);
