@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(ABSL_PROPAGATE_CXX_STD ON)
 set(protobuf_BUILD_TESTS OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${onnxinfo_SOURCE_DIR}/tests)
 
 # protobuf
 include(FetchContent)
@@ -38,15 +39,15 @@ file(GLOB_RECURSE SOURCES "${onnxinfo_SOURCE_DIR}/src/*.cpp")
 list(REMOVE_ITEM SOURCES "${onnxinfo_SOURCE_DIR}/src/main.cpp")
 
 add_library(
-    ${PROJECT_NAME} STATIC
+    _onnxinfo STATIC
 
     ${SOURCES}
     ${onnxinfo_SOURCE_DIR}/third_party/onnx/onnx.proto3.pb.cc
 )
-target_link_libraries(${PROJECT_NAME}
+add_dependencies(_onnxinfo protobuf::protoc)
+target_link_libraries(_onnxinfo
     protobuf::libprotobuf
 )
 
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${onnxinfo_SOURCE_DIR}/tests)
-pybind11_add_module(_onnxinfo src/main.cpp)
-target_link_libraries(_onnxinfo PRIVATE ${PROJECT_NAME})
+pybind11_add_module(${PROJECT_NAME} src/main.cpp)
+target_link_libraries(${PROJECT_NAME} PRIVATE _onnxinfo)
