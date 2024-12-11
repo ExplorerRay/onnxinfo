@@ -9,6 +9,24 @@ int64_t get_prod(std::vector<int64_t> &vec) {
   return prod;
 }
 
+NodeAnalArgs get_anal_args(onnx::NodeProto &node, const std::unordered_map<std::string, std::vector<int64_t>> &ndname_to_shape, const std::unordered_map<std::string, size_t> &ndname_to_dtype_size) {
+  NodeAnalArgs anal_args;
+  std::vector<std::vector<int64_t>> input_shapes;
+  std::unordered_map<std::string, size_t> ndname_to_size;
+  for (auto input : node.input()) {
+    input_shapes.emplace_back(ndname_to_shape.at(input));
+    ndname_to_size[input] = ndname_to_dtype_size.at(input);
+  }
+  std::vector<int64_t> output_shape = ndname_to_shape.at(node.output(0));
+  ndname_to_size[node.output(0)] = ndname_to_dtype_size.at(node.output(0));
+
+  anal_args.input_shapes = input_shapes;
+  anal_args.output_shape = output_shape;
+  anal_args.ndname_to_size = ndname_to_size;
+
+  return anal_args;
+}
+
 AnalyzeData analyze_node_Conv(onnx::NodeProto &node, std::vector<std::vector<int64_t>> &input_shapes, std::vector<int64_t> &output_shape, std::unordered_map<std::string, size_t> &ndname_to_size) {
   AnalyzeData data;
 
@@ -135,89 +153,27 @@ AnalyzeData analyze_node_Gemm(onnx::NodeProto &node, std::vector<std::vector<int
 
 AnalyzeData analyze_node(onnx::NodeProto &node, const std::unordered_map<std::string, std::vector<int64_t>> &ndname_to_shape, const std::unordered_map<std::string, size_t> &ndname_to_dtype_size) {
   AnalyzeData data;
+  NodeAnalArgs anal_args = get_anal_args(node, ndname_to_shape, ndname_to_dtype_size);
   if (node.op_type() == "Conv") {
-    std::unordered_map<std::string, size_t> ndname_to_size;
-    std::vector<std::vector<int64_t>> input_shapes;
-    for (auto input : node.input()) {
-      ndname_to_size[input] = ndname_to_dtype_size.at(input);
-      input_shapes.emplace_back(ndname_to_shape.at(input));
-    }
-    std::vector<int64_t> output_shape = ndname_to_shape.at(node.output(0));
-    ndname_to_size[node.output(0)] = ndname_to_dtype_size.at(node.output(0));
-
-    data = analyze_node_Conv(node, input_shapes, output_shape, ndname_to_size);
+    data = analyze_node_Conv(node, anal_args.input_shapes, anal_args.output_shape, anal_args.ndname_to_size);
   }
   else if (node.op_type() == "Relu") {
-    std::unordered_map<std::string, size_t> ndname_to_size;
-    std::vector<std::vector<int64_t>> input_shapes;
-    for (auto input : node.input()) {
-      ndname_to_size[input] = ndname_to_dtype_size.at(input);
-      input_shapes.emplace_back(ndname_to_shape.at(input));
-    }
-    std::vector<int64_t> output_shape = ndname_to_shape.at(node.output(0));
-    ndname_to_size[node.output(0)] = ndname_to_dtype_size.at(node.output(0));
-
-    data = analyze_node_Relu(node, input_shapes, output_shape, ndname_to_size);
+    data = analyze_node_Relu(node, anal_args.input_shapes, anal_args.output_shape, anal_args.ndname_to_size);
   }
   else if (node.op_type() == "MaxPool") {
-    std::unordered_map<std::string, size_t> ndname_to_size;
-    std::vector<std::vector<int64_t>> input_shapes;
-    for (auto input : node.input()) {
-      ndname_to_size[input] = ndname_to_dtype_size.at(input);
-      input_shapes.emplace_back(ndname_to_shape.at(input));
-    }
-    std::vector<int64_t> output_shape = ndname_to_shape.at(node.output(0));
-    ndname_to_size[node.output(0)] = ndname_to_dtype_size.at(node.output(0));
-
-    data = analyze_node_MaxPool(node, input_shapes, output_shape, ndname_to_size);
+    data = analyze_node_MaxPool(node, anal_args.input_shapes, anal_args.output_shape, anal_args.ndname_to_size);
   }
   else if (node.op_type() == "Add") {
-    std::unordered_map<std::string, size_t> ndname_to_size;
-    std::vector<std::vector<int64_t>> input_shapes;
-    for (auto input : node.input()) {
-      ndname_to_size[input] = ndname_to_dtype_size.at(input);
-      input_shapes.emplace_back(ndname_to_shape.at(input));
-    }
-    std::vector<int64_t> output_shape = ndname_to_shape.at(node.output(0));
-    ndname_to_size[node.output(0)] = ndname_to_dtype_size.at(node.output(0));
-
-    data = analyze_node_Add(node, input_shapes, output_shape, ndname_to_size);
+    data = analyze_node_Add(node, anal_args.input_shapes, anal_args.output_shape, anal_args.ndname_to_size);
   }
   else if (node.op_type() == "GlobalAveragePool") {
-    std::unordered_map<std::string, size_t> ndname_to_size;
-    std::vector<std::vector<int64_t>> input_shapes;
-    for (auto input : node.input()) {
-      ndname_to_size[input] = ndname_to_dtype_size.at(input);
-      input_shapes.emplace_back(ndname_to_shape.at(input));
-    }
-    std::vector<int64_t> output_shape = ndname_to_shape.at(node.output(0));
-    ndname_to_size[node.output(0)] = ndname_to_dtype_size.at(node.output(0));
-
-    data = analyze_node_GlobalAveragePool(node, input_shapes, output_shape, ndname_to_size);
+    data = analyze_node_GlobalAveragePool(node, anal_args.input_shapes, anal_args.output_shape, anal_args.ndname_to_size);
   }
   else if (node.op_type() == "Flatten") {
-    std::unordered_map<std::string, size_t> ndname_to_size;
-    std::vector<std::vector<int64_t>> input_shapes;
-    for (auto input : node.input()) {
-      ndname_to_size[input] = ndname_to_dtype_size.at(input);
-      input_shapes.emplace_back(ndname_to_shape.at(input));
-    }
-    std::vector<int64_t> output_shape = ndname_to_shape.at(node.output(0));
-    ndname_to_size[node.output(0)] = ndname_to_dtype_size.at(node.output(0));
-
-    data = analyze_node_Flatten(node, input_shapes, output_shape, ndname_to_size);
+    data = analyze_node_Flatten(node, anal_args.input_shapes, anal_args.output_shape, anal_args.ndname_to_size);
   }
   else if (node.op_type() == "Gemm") {
-    std::unordered_map<std::string, size_t> ndname_to_size;
-    std::vector<std::vector<int64_t>> input_shapes;
-    for (auto input : node.input()) {
-      ndname_to_size[input] = ndname_to_dtype_size.at(input);
-      input_shapes.emplace_back(ndname_to_shape.at(input));
-    }
-    std::vector<int64_t> output_shape = ndname_to_shape.at(node.output(0));
-    ndname_to_size[node.output(0)] = ndname_to_dtype_size.at(node.output(0));
-
-    data = analyze_node_Gemm(node, input_shapes, output_shape, ndname_to_size);
+    data = analyze_node_Gemm(node, anal_args.input_shapes, anal_args.output_shape, anal_args.ndname_to_size);
   }
   else {
     std::cerr << "Error: " << node.op_type() << " not supported now\n";
