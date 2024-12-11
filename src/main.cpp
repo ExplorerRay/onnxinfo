@@ -3,13 +3,21 @@
 #include "utils.hpp"
 #include "InferShape.hpp"
 
+void summary(std::string model_path) {
+  onnx::ModelProto model_proto = read_onnx(model_path);
+  onnx::GraphProto graph_proto = model_proto.graph();
+  InferShapeImpl infer_shape_impl(graph_proto);
+  infer_shape_impl.infer_shapes();
+  infer_shape_impl.print_summary();
+}
+
 namespace py = pybind11;
 
 PYBIND11_MODULE(onnxinfo, m) {
   m.doc() = "pybind11 onnxinfo module"; // optional module docstring
 
   m.def("read_onnx", &read_onnx, "A C++ function that read ONNX model");
-  // m.def("iterate_graph", &iterate_graph, "A C++ function that iterate ONNX graph");
+  m.def("summary", &summary, "A C++ function that print summary of ONNX model");
 
   py::class_<InferShapeImpl>(m, "InferShapeImpl")
     .def(py::init<const onnx::GraphProto &>())

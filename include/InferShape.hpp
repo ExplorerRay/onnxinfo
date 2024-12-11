@@ -15,7 +15,7 @@ public:
   ~InferShapeImpl() = default;
 
   void set_io_iniz_shape_to_map(bool analyze);
-  void infer_shapes(bool analyze = true);
+  void infer_shapes(bool analyze);
   void infer_shapes();
   void print_summary();
 

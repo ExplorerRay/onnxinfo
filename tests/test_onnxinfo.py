@@ -24,4 +24,10 @@ def test_print_summary():
         target.infer_shapes()
         target.print_summary()
     except:
-        pytest.fail("iterate_graph failed")
+        pytest.fail("print summary failed")
+
+def test_summary():
+    try:
+        onnxinfo.summary('models/resnet18_Opset16.onnx')
+    except:
+        pytest.fail("summary failed")
