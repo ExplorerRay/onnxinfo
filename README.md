@@ -13,6 +13,14 @@ A tool to show ONNX model summary like torchinfo
 4. `cmake --build build/ [--parallel <thread number>]` to build dependency and onnxinfo
 
 ## Usage
+Your Python file should be in the same directory as the `.so` file built by CMake.
+```python
+import onnxinfo
+
+onnxinfo.summary('<onnx model path>')
+```
+
+## Functions
 ### Shape Inference
 Support node types so far: Conv, Relu, MaxPool, Add, GlobalAveragePool, Flatten, Gemm
 
@@ -38,3 +46,6 @@ Use model(resnet18_Opset16.onnx) from [ONNX Model Zoo](https://github.com/onnx/m
 * Run `docker build -t onnxinfo -f docker/Dockerfile .` first.
     * You can type `docker run onnxinfo` to run tests.
     * Or type `docker run -it onnxinfo bash` to enter the environment which has onnxinfo.
+
+## Limited Support
+There are many node types in ONNX, but I only support some of them now.
