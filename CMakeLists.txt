@@ -58,18 +58,18 @@ file(GLOB_RECURSE SOURCES "${onnxinfo_SOURCE_DIR}/src/*.cpp")
 list(REMOVE_ITEM SOURCES "${onnxinfo_SOURCE_DIR}/src/main.cpp")
 
 add_library(
-    ${PROJECT_NAME} STATIC
+    _onnxinfo STATIC
 
     ${SOURCES}
     ${onnxinfo_SOURCE_DIR}/third_party/onnx/onnx.proto3.pb.cc
 )
-add_dependencies(${PROJECT_NAME} protobuf::protoc)
-target_link_libraries(${PROJECT_NAME}
+add_dependencies(_onnxinfo protobuf::protoc)
+target_link_libraries(_onnxinfo
     protobuf::libprotobuf
 )
 
-pybind11_add_module(_onnxinfo src/main.cpp)
-target_link_libraries(_onnxinfo PRIVATE ${PROJECT_NAME})
+pybind11_add_module(${PROJECT_NAME} src/main.cpp)
+target_link_libraries(${PROJECT_NAME} PRIVATE _onnxinfo)
 
 # custom cmake target for test
 # add_custom_target(test ALL)

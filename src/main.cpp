@@ -5,7 +5,7 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(_onnxinfo, m) {
+PYBIND11_MODULE(onnxinfo, m) {
   m.doc() = "pybind11 onnxinfo module"; // optional module docstring
 
   m.def("read_onnx", &read_onnx, "A C++ function that read ONNX model");
