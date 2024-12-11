@@ -35,21 +35,21 @@ void print_dim(const ::onnx::TensorShapeProto_Dimension &dim) {
 }
 
 void print_dims_vec(const std::vector<int64_t> &dims) {
-    std::cout << "[";
-    for (size_t i = 0; i < dims.size() - 1; ++i) {
-        std::cout << dims[i] << ", ";
-    }
-    std::cout << dims.back() << "]";
+  std::cout << "[";
+  for (size_t i = 0; i < dims.size() - 1; ++i) {
+    std::cout << dims[i] << ", ";
+  }
+  std::cout << dims.back() << "]";
 }
 
 std::string dims_vec_to_str(const std::vector<int64_t> &dims) {
-    std::string str = "[";
-    for (size_t i = 0; i < dims.size() - 1; ++i) {
-        str += std::to_string(dims[i]) + ", ";
-    }
-    str += std::to_string(dims.back()) + "]";
+  std::string str = "[";
+  for (size_t i = 0; i < dims.size() - 1; ++i) {
+    str += std::to_string(dims[i]) + ", ";
+  }
+  str += std::to_string(dims.back()) + "]";
 
-    return str;
+  return str;
 }
 
 void set_vec_to_shape(onnx::ValueInfoProto *val_info, const std::vector<int64_t> &dims) {
@@ -64,7 +64,7 @@ std::string string_trimmer(const std::string &inputString, const size_t maxLen) 
   std::string trimmedString = inputString;
 
   if (trimmedString.length() > maxLen) {
-      trimmedString = trimmedString.substr(0, maxLen - 3) + "...";
+    trimmedString = trimmedString.substr(0, maxLen - 3) + "...";
   }
 
   return trimmedString;

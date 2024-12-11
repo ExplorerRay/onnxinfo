@@ -8,9 +8,9 @@
 #define DIV_MACS 4
 
 struct AnalyzeData {
-    int64_t mac = 0;
-    int64_t param = 0;
-    int64_t mem = 0;
+  int64_t mac = 0;
+  int64_t param = 0;
+  int64_t mem = 0;
 };
 
 int64_t get_prod(std::vector<int64_t> &vec);
