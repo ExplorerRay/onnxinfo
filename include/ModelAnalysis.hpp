@@ -3,9 +3,10 @@
 #include "InferShape.hpp"
 #include "onnx.proto3.pb.h"
 
-#define MUL_MACS 1
-#define ADD_MACS 1
-#define DIV_MACS 4
+constexpr int64_t MUL_MACS = 1;
+constexpr int64_t ADD_MACS = 1;
+// refers to onnx-tool/node.py
+constexpr int64_t DIV_MACS = 4;
 
 struct AnalyzeData {
   int64_t mac = 0;
