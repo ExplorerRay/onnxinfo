@@ -5,7 +5,10 @@
 #include "AttrInfo.hpp"
 #include "ModelAnalysis.hpp"
 
-#define INDENT 30
+constexpr size_t INDENT = 30;
+constexpr size_t TP_IND = 20;
+constexpr size_t SP_IND = 23;
+constexpr size_t DT_IND = 16;
 
 class InferShapeImpl {
 public:

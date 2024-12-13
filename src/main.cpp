@@ -5,8 +5,7 @@
 
 void summary(std::string model_path) {
   onnx::ModelProto model_proto = read_onnx(model_path);
-  onnx::GraphProto graph_proto = model_proto.graph();
-  InferShapeImpl infer_shape_impl(graph_proto);
+  InferShapeImpl infer_shape_impl(model_proto.graph());
   infer_shape_impl.infer_shapes();
   infer_shape_impl.print_summary();
 }

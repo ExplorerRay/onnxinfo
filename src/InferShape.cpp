@@ -64,30 +64,32 @@ void InferShapeImpl::print_summary() {
   std::cin.tie(0);
 
   if (this->ndname_to_anal_data.empty()) {
+    size_t TOTAL_IND = INDENT + TP_IND + SP_IND * 2;
     std::cout << std::left << std::setw(INDENT) << "Name"
-        << std::left << std::setw(INDENT) << "Type"
-        << std::left << std::setw(INDENT) << "Input Shape"
-        << std::left << std::setw(INDENT) << "Output Shape" << '\n';
-    std::cout << std::string(INDENT * 4, '-') << '\n';
+        << std::left << std::setw(TP_IND) << "Type"
+        << std::left << std::setw(SP_IND) << "Input Shape"
+        << std::left << std::setw(SP_IND) << "Output Shape" << '\n';
+    std::cout << std::string(TOTAL_IND, '-') << '\n';
 
     for (auto node : graph.node()) {
       std::cout << std::left << std::setw(INDENT) << string_trimmer(node.name(), INDENT-5);
 
-      std::cout << std::left << std::setw(INDENT) << node.op_type();
-      std::cout << std::setw(INDENT) << dims_vec_to_str(this->ndname_to_shape[node.input(0)]);
-      std::cout << std::setw(INDENT) << dims_vec_to_str(this->ndname_to_shape[node.output(0)]);
+      std::cout << std::left << std::setw(TP_IND) << node.op_type();
+      std::cout << std::setw(SP_IND) << dims_vec_to_str(this->ndname_to_shape[node.input(0)]);
+      std::cout << std::setw(SP_IND) << dims_vec_to_str(this->ndname_to_shape[node.output(0)]);
       std::cout << '\n';
     }
   }
   else {
+    size_t TOTAL_IND = INDENT + TP_IND + SP_IND * 2 + DT_IND * 3;
     std::cout << std::left << std::setw(INDENT) << "Name"
-        << std::left << std::setw(INDENT) << "Type"
-        << std::left << std::setw(INDENT) << "Input Shape"
-        << std::left << std::setw(INDENT) << "Output Shape"
-        << std::left << std::setw(INDENT) << "MACs"
-        << std::left << std::setw(INDENT) << "Params"
-        << std::left << std::setw(INDENT) << "Memory" << '\n';
-    std::cout << std::string(INDENT * 7, '-') << '\n';
+        << std::left << std::setw(TP_IND) << "Type"
+        << std::left << std::setw(SP_IND) << "Input Shape"
+        << std::left << std::setw(SP_IND) << "Output Shape"
+        << std::left << std::setw(DT_IND) << "MACs"
+        << std::left << std::setw(DT_IND) << "Params"
+        << std::left << std::setw(DT_IND) << "Memory" << '\n';
+    std::cout << std::string(TOTAL_IND, '-') << '\n';
 
     AnalyzeData total_data;
     for (auto node : graph.node()) {
@@ -97,21 +99,21 @@ void InferShapeImpl::print_summary() {
 
       std::cout << std::left << std::setw(INDENT) << string_trimmer(node.name(), INDENT-5);
 
-      std::cout << std::left << std::setw(INDENT) << node.op_type();
-      std::cout << std::setw(INDENT) << dims_vec_to_str(this->ndname_to_shape[node.input(0)]);
-      std::cout << std::setw(INDENT) << dims_vec_to_str(this->ndname_to_shape[node.output(0)]);
-      std::cout << std::setw(INDENT) << int64_to_str(this->ndname_to_anal_data[node.name()].mac);
-      std::cout << std::setw(INDENT) << int64_to_str(this->ndname_to_anal_data[node.name()].param);
-      std::cout << std::setw(INDENT) << int64_to_str(this->ndname_to_anal_data[node.name()].mem);
+      std::cout << std::left << std::setw(TP_IND) << node.op_type();
+      std::cout << std::setw(SP_IND) << dims_vec_to_str(this->ndname_to_shape[node.input(0)]);
+      std::cout << std::setw(SP_IND) << dims_vec_to_str(this->ndname_to_shape[node.output(0)]);
+      std::cout << std::setw(DT_IND) << int64_to_str(this->ndname_to_anal_data[node.name()].mac);
+      std::cout << std::setw(DT_IND) << int64_to_str(this->ndname_to_anal_data[node.name()].param);
+      std::cout << std::setw(DT_IND) << int64_to_str(this->ndname_to_anal_data[node.name()].mem);
       std::cout << '\n';
     }
     std::cout << std::left << std::setw(INDENT) << "Total";
-    std::cout << std::left << std::setw(INDENT) << "-";
-    std::cout << std::setw(INDENT) << dims_vec_to_str(this->ndname_to_shape[graph.input(0).name()]);
-    std::cout << std::setw(INDENT) << dims_vec_to_str(this->ndname_to_shape[graph.output(0).name()]);
-    std::cout << std::setw(INDENT) << int64_to_str(total_data.mac);
-    std::cout << std::setw(INDENT) << int64_to_str(total_data.param);
-    std::cout << std::setw(INDENT) << int64_to_str(total_data.mem);
+    std::cout << std::left << std::setw(TP_IND) << "-";
+    std::cout << std::setw(SP_IND) << dims_vec_to_str(this->ndname_to_shape[graph.input(0).name()]);
+    std::cout << std::setw(SP_IND) << dims_vec_to_str(this->ndname_to_shape[graph.output(0).name()]);
+    std::cout << std::setw(DT_IND) << int64_to_str(total_data.mac);
+    std::cout << std::setw(DT_IND) << int64_to_str(total_data.param);
+    std::cout << std::setw(DT_IND) << int64_to_str(total_data.mem);
     std::cout << '\n';
   }
 }
