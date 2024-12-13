@@ -55,7 +55,7 @@ link_directories(
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -fPIC -flto=auto")
 file(GLOB_RECURSE SOURCES "${onnxinfo_SOURCE_DIR}/src/*.cpp")
-list(REMOVE_ITEM SOURCES "${onnxinfo_SOURCE_DIR}/src/main.cpp")
+list(REMOVE_ITEM SOURCES "${onnxinfo_SOURCE_DIR}/src/pybind.cpp")
 
 add_library(
     _onnxinfo STATIC
@@ -68,7 +68,7 @@ target_link_libraries(_onnxinfo
     protobuf::libprotobuf
 )
 
-pybind11_add_module(${PROJECT_NAME} src/main.cpp)
+pybind11_add_module(${PROJECT_NAME} src/pybind.cpp)
 target_link_libraries(${PROJECT_NAME} PRIVATE _onnxinfo)
 
 # custom cmake target for test
