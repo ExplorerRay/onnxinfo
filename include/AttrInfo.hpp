@@ -1,7 +1,6 @@
 #pragma once
 
 #include <vector>
-#include "onnx.proto3.pb.h"
 
 struct AttrInfo_Conv {
   std::vector<int64_t> kernel_shape; // got from Weight

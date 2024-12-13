@@ -22,15 +22,15 @@ public:
   void infer_shapes();
   void print_summary();
 
-  const std::unordered_map<std::string, std::vector<int64_t>> get_ndname_to_shape() {
+  const str_shape_map_t get_ndname_to_shape() {
     return this->ndname_to_shape;
   }
 
 private:
   onnx::GraphProto graph;
-  std::unordered_map<std::string, std::vector<int64_t>> ndname_to_shape;
+  str_shape_map_t ndname_to_shape;
   std::unordered_map<std::string, struct AnalyzeData> ndname_to_anal_data;
-  std::unordered_map<std::string, size_t> ndname_to_dtype_size;
+  str_sz_map_t ndname_to_dtype_size;
 
   // TODO: more op types
   void infer_shapes_Conv(onnx::NodeProto &node);

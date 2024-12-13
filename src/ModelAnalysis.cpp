@@ -9,10 +9,10 @@ int64_t get_prod(std::vector<int64_t> &vec) {
   return prod;
 }
 
-NodeAnalArgs get_anal_args(onnx::NodeProto &node, const std::unordered_map<std::string, std::vector<int64_t>> &ndname_to_shape, const std::unordered_map<std::string, size_t> &ndname_to_dtype_size) {
+NodeAnalArgs get_anal_args(onnx::NodeProto &node, const str_shape_map_t &ndname_to_shape, const str_sz_map_t &ndname_to_dtype_size) {
   NodeAnalArgs anal_args;
   std::vector<std::vector<int64_t>> input_shapes;
-  std::unordered_map<std::string, size_t> ndname_to_size;
+  str_sz_map_t ndname_to_size;
   for (auto input : node.input()) {
     input_shapes.emplace_back(ndname_to_shape.at(input));
     ndname_to_size[input] = ndname_to_dtype_size.at(input);
@@ -27,7 +27,7 @@ NodeAnalArgs get_anal_args(onnx::NodeProto &node, const std::unordered_map<std::
   return anal_args;
 }
 
-AnalyzeData analyze_node_Conv(onnx::NodeProto &node, std::vector<std::vector<int64_t>> &input_shapes, std::vector<int64_t> &output_shape, std::unordered_map<std::string, size_t> &ndname_to_size) {
+AnalyzeData analyze_node_Conv(onnx::NodeProto &node, std::vector<std::vector<int64_t>> &input_shapes, std::vector<int64_t> &output_shape, str_sz_map_t &ndname_to_size) {
   AnalyzeData data;
 
   // MACs
@@ -51,7 +51,7 @@ AnalyzeData analyze_node_Conv(onnx::NodeProto &node, std::vector<std::vector<int
   return data;
 }
 
-AnalyzeData analyze_node_Relu(onnx::NodeProto &node, std::vector<std::vector<int64_t>> &input_shapes, std::vector<int64_t> &output_shape, std::unordered_map<std::string, size_t> &ndname_to_size) {
+AnalyzeData analyze_node_Relu(onnx::NodeProto &node, std::vector<std::vector<int64_t>> &input_shapes, std::vector<int64_t> &output_shape, str_sz_map_t &ndname_to_size) {
   AnalyzeData data;
 
   data.param = 0; // no trainable parameters
@@ -66,7 +66,7 @@ AnalyzeData analyze_node_Relu(onnx::NodeProto &node, std::vector<std::vector<int
   return data;
 }
 
-AnalyzeData analyze_node_MaxPool(onnx::NodeProto &node, std::vector<std::vector<int64_t>> &input_shapes, std::vector<int64_t> &output_shape, std::unordered_map<std::string, size_t> &ndname_to_size) {
+AnalyzeData analyze_node_MaxPool(onnx::NodeProto &node, std::vector<std::vector<int64_t>> &input_shapes, std::vector<int64_t> &output_shape, str_sz_map_t &ndname_to_size) {
   AnalyzeData data;
 
   // MACs
@@ -82,7 +82,7 @@ AnalyzeData analyze_node_MaxPool(onnx::NodeProto &node, std::vector<std::vector<
   return data;
 }
 
-AnalyzeData analyze_node_Add(onnx::NodeProto &node, std::vector<std::vector<int64_t>> &input_shapes, std::vector<int64_t> &output_shape, std::unordered_map<std::string, size_t> &ndname_to_size) {
+AnalyzeData analyze_node_Add(onnx::NodeProto &node, std::vector<std::vector<int64_t>> &input_shapes, std::vector<int64_t> &output_shape, str_sz_map_t &ndname_to_size) {
   AnalyzeData data;
 
   // MACs
@@ -100,7 +100,7 @@ AnalyzeData analyze_node_Add(onnx::NodeProto &node, std::vector<std::vector<int6
   return data;
 }
 
-AnalyzeData analyze_node_GlobalAveragePool(onnx::NodeProto &node, std::vector<std::vector<int64_t>> &input_shapes, std::vector<int64_t> &output_shape, std::unordered_map<std::string, size_t> &ndname_to_size) {
+AnalyzeData analyze_node_GlobalAveragePool(onnx::NodeProto &node, std::vector<std::vector<int64_t>> &input_shapes, std::vector<int64_t> &output_shape, str_sz_map_t &ndname_to_size) {
   AnalyzeData data;
 
   // MACs
@@ -119,7 +119,7 @@ AnalyzeData analyze_node_GlobalAveragePool(onnx::NodeProto &node, std::vector<st
   return data;
 }
 
-AnalyzeData analyze_node_Flatten(onnx::NodeProto &node, std::vector<std::vector<int64_t>> &input_shapes, std::vector<int64_t> &output_shape, std::unordered_map<std::string, size_t> &ndname_to_size) {
+AnalyzeData analyze_node_Flatten(onnx::NodeProto &node, std::vector<std::vector<int64_t>> &input_shapes, std::vector<int64_t> &output_shape, str_sz_map_t &ndname_to_size) {
   AnalyzeData data;
 
   // MACs
@@ -135,7 +135,7 @@ AnalyzeData analyze_node_Flatten(onnx::NodeProto &node, std::vector<std::vector<
   return data;
 }
 
-AnalyzeData analyze_node_Gemm(onnx::NodeProto &node, std::vector<std::vector<int64_t>> &input_shapes, std::vector<int64_t> &output_shape, std::unordered_map<std::string, size_t> &ndname_to_size) {
+AnalyzeData analyze_node_Gemm(onnx::NodeProto &node, std::vector<std::vector<int64_t>> &input_shapes, std::vector<int64_t> &output_shape, str_sz_map_t &ndname_to_size) {
   AnalyzeData data;
 
   // MACs
@@ -151,7 +151,7 @@ AnalyzeData analyze_node_Gemm(onnx::NodeProto &node, std::vector<std::vector<int
   return data;
 }
 
-AnalyzeData analyze_node(onnx::NodeProto &node, const std::unordered_map<std::string, std::vector<int64_t>> &ndname_to_shape, const std::unordered_map<std::string, size_t> &ndname_to_dtype_size) {
+AnalyzeData analyze_node(onnx::NodeProto &node, const str_shape_map_t &ndname_to_shape, const str_sz_map_t &ndname_to_dtype_size) {
   AnalyzeData data;
   NodeAnalArgs anal_args = get_anal_args(node, ndname_to_shape, ndname_to_dtype_size);
   if (node.op_type() == "Conv") {
