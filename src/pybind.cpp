@@ -13,7 +13,7 @@ void summary(std::string model_path) {
 namespace py = pybind11;
 
 PYBIND11_MODULE(onnxinfo, m) {
-  m.doc() = "pybind11 onnxinfo module"; // optional module docstring
+  m.doc() = "pybind11 onnxinfo module";  // optional module docstring
 
   m.def("read_onnx", &read_onnx, "A C++ function that read ONNX model");
   m.def("summary", &summary, "A C++ function that print summary of ONNX model");

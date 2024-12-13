@@ -9,14 +9,14 @@ onnx::ModelProto read_onnx(const std::string &filename) {
     throw std::invalid_argument("File not found: " + filename);
   }
 
-  std::streamsize size = input.tellg(); // get current position in file for file size
-  input.seekg(0, std::ios::beg); // move to start of file
+  std::streamsize size = input.tellg();  // get current position in file for file size
+  input.seekg(0, std::ios::beg);  // move to start of file
 
   std::vector<char> buffer(size);
-  input.read(buffer.data(), size); // read raw data
+  input.read(buffer.data(), size);  // read raw data
 
   onnx::ModelProto model;
-  model.ParseFromArray(buffer.data(), size); // parse protobuf
+  model.ParseFromArray(buffer.data(), size);  // parse protobuf
 
   return model;
 }

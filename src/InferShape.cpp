@@ -17,7 +17,8 @@ void InferShapeImpl::set_io_iniz_shape_to_map(bool analyze) {
 
     // get dtype size
     if (analyze) {
-      if (input.type().tensor_type().elem_type() == 1) { // float32
+      if (input.type().tensor_type().elem_type() == 1) {
+        // float32
         this->ndname_to_dtype_size[input.name()] = 4;
       }
     }
@@ -168,10 +169,17 @@ void InferShapeImpl::infer_shapes_Conv(onnx::NodeProto &node) {
   auto input_shape = input_shapes[0];
   auto weight_shape = input_shapes[1];
   std::vector<int64_t> output_shape;
-  output_shape.emplace_back(input_shape[0]); // batch size
-  output_shape.emplace_back(weight_shape[0]); // number of channels
+  output_shape.emplace_back(input_shape[0]);  // batch size
+  output_shape.emplace_back(weight_shape[0]);  // number of channels
   for (size_t i = 0; i < attr_info.kernel_shape.size(); ++i) {
-    output_shape.emplace_back((input_shape[i + 2] + 2 * attr_info.pads[i] - attr_info.dilations[i] * (attr_info.kernel_shape[i] - 1) - 1) / attr_info.strides[i] + 1);
+    int64_t pad = attr_info.pads[i];
+    int64_t dilation = attr_info.dilations[i];
+    int64_t kernel = attr_info.kernel_shape[i];
+    int64_t stride = attr_info.strides[i];
+
+    output_shape.emplace_back(
+      (input_shape[i + 2] + 2 * pad - dilation * (kernel - 1) - 1) / stride + 1
+    );
   }
 
   // set value_info and update ndname_to_shape
@@ -214,7 +222,7 @@ void InferShapeImpl::infer_shapes_MaxPool(onnx::NodeProto &node) {
   attr_info.set_default_attr(input_shape.size());
   for (auto attr : node.attribute()) {
     // std::cout << "attr name: " << attr.name() << '\n';
-    if (attr.name() == "kernel_shape") { // required
+    if (attr.name() == "kernel_shape") {  // required
       for (int i = 0; i < attr.ints_size(); ++i) {
         attr_info.kernel_shape.emplace_back(attr.ints(i));
       }
@@ -244,10 +252,17 @@ void InferShapeImpl::infer_shapes_MaxPool(onnx::NodeProto &node) {
 
   // calculate output shape after maxpool
   std::vector<int64_t> output_shape;
-  output_shape.emplace_back(input_shape[0]); // batch size
-  output_shape.emplace_back(input_shape[1]); // number of channels
+  output_shape.emplace_back(input_shape[0]);  // batch size
+  output_shape.emplace_back(input_shape[1]);  // number of channels
   for (size_t i = 0; i < attr_info.kernel_shape.size(); ++i) {
-    output_shape.emplace_back((input_shape[i + 2] + 2 * attr_info.pads[i] - attr_info.dilations[i] * (attr_info.kernel_shape[i] - 1) - 1) / attr_info.strides[i] + 1);
+    int64_t pad = attr_info.pads[i];
+    int64_t dilation = attr_info.dilations[i];
+    int64_t kernel = attr_info.kernel_shape[i];
+    int64_t stride = attr_info.strides[i];
+
+    output_shape.emplace_back(
+      (input_shape[i + 2] + 2 * pad - dilation * (kernel - 1) - 1) / stride + 1
+    );
   }
 
   // set value_info and update ndname_to_shape
