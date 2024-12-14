@@ -27,14 +27,41 @@ NodeAnalArgs get_anal_args(onnx::NodeProto &node,
   const str_shape_map_t &shape_map,
   const str_sz_map_t &sz_map);
 
-AnalyzeData analyze_node_Conv(onnx::NodeProto &node, NodeAnalArgs &anal_args);
-AnalyzeData analyze_node_Relu(onnx::NodeProto &node, NodeAnalArgs &anal_args);
-AnalyzeData analyze_node_MaxPool(onnx::NodeProto &node, NodeAnalArgs &anal_args);
-AnalyzeData analyze_node_Add(onnx::NodeProto &node, NodeAnalArgs &anal_args);
-AnalyzeData analyze_node_GlobalAveragePool(onnx::NodeProto &node, NodeAnalArgs &anal_args);
-AnalyzeData analyze_node_Flatten(onnx::NodeProto &node, NodeAnalArgs &anal_args);
-AnalyzeData analyze_node_Gemm(onnx::NodeProto &node, NodeAnalArgs &anal_args);
+class AnalyzeImpl {
+public:
+  AnalyzeImpl() = default;
+  ~AnalyzeImpl() = default;
+  AnalyzeImpl(const AnalyzeImpl &other) : m_name_to_count(other.m_name_to_count) {}
+  AnalyzeImpl(AnalyzeImpl &&other) noexcept : m_name_to_count(std::move(other.m_name_to_count)) {}
+  AnalyzeImpl& operator=(const AnalyzeImpl &other) {
+    if (this != &other) {
+      this->m_name_to_count = other.m_name_to_count;
+    }
+    return *this;
+  }
+  AnalyzeImpl& operator=(AnalyzeImpl &&other) noexcept {
+    if (this != &other) {
+      this->m_name_to_count = std::move(other.m_name_to_count);
+    }
+    return *this;
+  }
 
-AnalyzeData analyze_node(onnx::NodeProto &node,
-  const str_shape_map_t &ndname_to_shape,
-  const str_sz_map_t &ndname_to_dtype_size);
+  AnalyzeData analyze_node(onnx::NodeProto &node,
+    const str_shape_map_t &ndname_to_shape,
+    const str_sz_map_t &ndname_to_dtype_size);
+
+  bool need_mem_add(const std::string &name);
+  void set_iniz_checked(const std::string &name);
+
+private:
+  str_sz_map_t m_name_to_count;
+
+  // TODO: more op types
+  AnalyzeData analyze_node_Conv(onnx::NodeProto &node, NodeAnalArgs &anal_args);
+  AnalyzeData analyze_node_Relu(onnx::NodeProto &node, NodeAnalArgs &anal_args);
+  AnalyzeData analyze_node_MaxPool(onnx::NodeProto &node, NodeAnalArgs &anal_args);
+  AnalyzeData analyze_node_Add(onnx::NodeProto &node, NodeAnalArgs &anal_args);
+  AnalyzeData analyze_node_GlobalAveragePool(onnx::NodeProto &node, NodeAnalArgs &anal_args);
+  AnalyzeData analyze_node_Flatten(onnx::NodeProto &node, NodeAnalArgs &anal_args);
+  AnalyzeData analyze_node_Gemm(onnx::NodeProto &node, NodeAnalArgs &anal_args);
+};

@@ -30,7 +30,17 @@ NodeAnalArgs get_anal_args(onnx::NodeProto &node,
   return anal_args;
 }
 
-AnalyzeData analyze_node_Conv(onnx::NodeProto &node, NodeAnalArgs &anal_args) {
+bool AnalyzeImpl::need_mem_add(const std::string &name) {
+  // check is initializer or not, and check is visited or not
+  bool in_map = this->m_name_to_count.find(name) != this->m_name_to_count.end();
+  return (in_map && this->m_name_to_count[name] == 0) || !in_map;
+}
+
+void AnalyzeImpl::set_iniz_checked(const std::string &name) {
+  this->m_name_to_count[name] = 0;
+}
+
+AnalyzeData AnalyzeImpl::analyze_node_Conv(onnx::NodeProto &node, NodeAnalArgs &anal_args) {
   AnalyzeData data;
   std::vector<std::vector<int64_t>> input_shapes = anal_args.input_shapes;
   std::vector<int64_t> output_shape = anal_args.output_shape;
@@ -46,18 +56,15 @@ AnalyzeData analyze_node_Conv(onnx::NodeProto &node, NodeAnalArgs &anal_args) {
     data.flop += out_prod * ADD_FLOPS;
   }
 
-  // Parameters & Memory
+  // Parameters
   for (size_t i = 1; i < input_shapes.size(); ++i) {
     data.param += get_prod(input_shapes[i]);
-    data.mem += get_prod(input_shapes[i]) * ndname_to_size[node.input(i)];
   }
-  data.mem += get_prod(input_shapes[0]) * ndname_to_size[node.input(0)];
-  data.mem += out_prod * ndname_to_size[node.output(0)];
 
   return data;
 }
 
-AnalyzeData analyze_node_Relu(onnx::NodeProto &node, NodeAnalArgs &anal_args) {
+AnalyzeData AnalyzeImpl::analyze_node_Relu(onnx::NodeProto &node, NodeAnalArgs &anal_args) {
   AnalyzeData data;
   std::vector<std::vector<int64_t>> input_shapes = anal_args.input_shapes;
   std::vector<int64_t> output_shape = anal_args.output_shape;
@@ -70,16 +77,10 @@ AnalyzeData analyze_node_Relu(onnx::NodeProto &node, NodeAnalArgs &anal_args) {
     data.flop += get_prod(input_shapes[i]) * CMP_FLOPS;
   }
 
-  // Memory
-  for (size_t i = 0; i < input_shapes.size(); ++i) {
-    data.mem += get_prod(input_shapes[i]) * ndname_to_size[node.input(i)];
-  }
-  data.mem += get_prod(output_shape) * ndname_to_size[node.output(0)];
-
   return data;
 }
 
-AnalyzeData analyze_node_MaxPool(onnx::NodeProto &node, NodeAnalArgs &anal_args) {
+AnalyzeData AnalyzeImpl::analyze_node_MaxPool(onnx::NodeProto &node, NodeAnalArgs &anal_args) {
   AnalyzeData data;
   std::vector<std::vector<int64_t>> input_shapes = anal_args.input_shapes;
   std::vector<int64_t> output_shape = anal_args.output_shape;
@@ -96,17 +97,13 @@ AnalyzeData analyze_node_MaxPool(onnx::NodeProto &node, NodeAnalArgs &anal_args)
   }
   data.flop = get_prod(output_shape) * get_prod(kernel_shape) * CMP_FLOPS;
 
-  // Parameters & Memory
+  // Parameters
   data.param = 0;  // no trainable parameters
-  for (size_t i = 0; i < input_shapes.size(); ++i) {
-    data.mem += get_prod(input_shapes[i]) * ndname_to_size[node.input(i)];
-  }
-  data.mem += get_prod(output_shape) * ndname_to_size[node.output(0)];
 
   return data;
 }
 
-AnalyzeData analyze_node_Add(onnx::NodeProto &node, NodeAnalArgs &anal_args) {
+AnalyzeData AnalyzeImpl::analyze_node_Add(onnx::NodeProto &node, NodeAnalArgs &anal_args) {
   AnalyzeData data;
   std::vector<std::vector<int64_t>> input_shapes = anal_args.input_shapes;
   std::vector<int64_t> output_shape = anal_args.output_shape;
@@ -116,17 +113,13 @@ AnalyzeData analyze_node_Add(onnx::NodeProto &node, NodeAnalArgs &anal_args) {
   data.flop += get_prod(output_shape) * ADD_FLOPS;
 
 
-  // Parameters & Memory
+  // Parameters
   data.param = 0;  // no trainable parameters
-  for (size_t i = 0; i < input_shapes.size(); ++i) {
-    data.mem += get_prod(input_shapes[i]) * ndname_to_size[node.input(i)];
-  }
-  data.mem += get_prod(output_shape) * ndname_to_size[node.output(0)];
 
   return data;
 }
 
-AnalyzeData analyze_node_GlobalAveragePool(onnx::NodeProto &node, NodeAnalArgs &anal_args) {
+AnalyzeData AnalyzeImpl::analyze_node_GlobalAveragePool(onnx::NodeProto &node, NodeAnalArgs &anal_args) {
   AnalyzeData data;
   std::vector<std::vector<int64_t>> input_shapes = anal_args.input_shapes;
   std::vector<int64_t> output_shape = anal_args.output_shape;
@@ -138,17 +131,13 @@ AnalyzeData analyze_node_GlobalAveragePool(onnx::NodeProto &node, NodeAnalArgs &
   }
   data.flop += get_prod(output_shape) * DIV_FLOPS;
 
-  // Parameters & Memory
+  // Parameters
   data.param = 0;  // no trainable parameters
-  for (size_t i = 0; i < input_shapes.size(); ++i) {
-    data.mem += get_prod(input_shapes[i]) * ndname_to_size[node.input(i)];
-  }
-  data.mem += get_prod(output_shape) * ndname_to_size[node.output(0)];
 
   return data;
 }
 
-AnalyzeData analyze_node_Flatten(onnx::NodeProto &node, NodeAnalArgs &anal_args) {
+AnalyzeData AnalyzeImpl::analyze_node_Flatten(onnx::NodeProto &node, NodeAnalArgs &anal_args) {
   AnalyzeData data;
   std::vector<std::vector<int64_t>> input_shapes = anal_args.input_shapes;
   std::vector<int64_t> output_shape = anal_args.output_shape;
@@ -157,17 +146,13 @@ AnalyzeData analyze_node_Flatten(onnx::NodeProto &node, NodeAnalArgs &anal_args)
   // MACs
   data.flop = 0;  // non MACs operation
 
-  // Parameters & Memory
+  // Parameters
   data.param = 0;  // no trainable parameters
-  for (size_t i = 0; i < input_shapes.size(); ++i) {
-    data.mem += get_prod(input_shapes[i]) * ndname_to_size[node.input(i)];
-  }
-  data.mem += get_prod(output_shape) * ndname_to_size[node.output(0)];
 
   return data;
 }
 
-AnalyzeData analyze_node_Gemm(onnx::NodeProto &node, NodeAnalArgs &anal_args) {
+AnalyzeData AnalyzeImpl::analyze_node_Gemm(onnx::NodeProto &node, NodeAnalArgs &anal_args) {
   AnalyzeData data;
   std::vector<std::vector<int64_t>> input_shapes = anal_args.input_shapes;
   std::vector<int64_t> output_shape = anal_args.output_shape;
@@ -179,17 +164,13 @@ AnalyzeData analyze_node_Gemm(onnx::NodeProto &node, NodeAnalArgs &anal_args) {
     data.flop += get_prod(output_shape) * ADD_FLOPS;
   }
 
-  // Parameters & Memory
+  // Parameters
   data.param = get_prod(input_shapes[0]) * get_prod(output_shape) + get_prod(output_shape);
-  for (size_t i = 0; i < input_shapes.size(); ++i) {
-    data.mem += get_prod(input_shapes[i]) * ndname_to_size[node.input(i)];
-  }
-  data.mem += get_prod(output_shape) * ndname_to_size[node.output(0)];
 
   return data;
 }
 
-AnalyzeData analyze_node(onnx::NodeProto &node,
+AnalyzeData AnalyzeImpl::analyze_node(onnx::NodeProto &node,
   const str_shape_map_t &ndname_to_shape,
   const str_sz_map_t &ndname_to_dtype_size)
 {
@@ -219,6 +200,21 @@ AnalyzeData analyze_node(onnx::NodeProto &node,
   else {
     std::cerr << "Error: " << node.op_type() << " not supported now\n";
     exit(1);
+  }
+
+  // Memory
+  for (int i = 0; i < node.input_size(); ++i) {
+    if (need_mem_add(node.input(i))) {
+      std::vector<int64_t> shape = ndname_to_shape.at(node.input(i));
+      size_t sz = ndname_to_dtype_size.at(node.input(i));
+      data.mem += get_prod(shape) * sz;
+      this->m_name_to_count[node.input(i)] = 1;
+    }
+  }
+  for (int i = 0; i < node.output_size(); ++i) {
+    std::vector<int64_t> shape = ndname_to_shape.at(node.output(i));
+    size_t sz = ndname_to_dtype_size.at(node.output(i));
+    data.mem += get_prod(shape) * sz;
   }
 
   return data;

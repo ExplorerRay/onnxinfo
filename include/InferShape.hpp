@@ -14,7 +14,7 @@ class InferShapeImpl {
 public:
   InferShapeImpl() = default;
   InferShapeImpl(const onnx::GraphProto &in_graph) : m_graph(in_graph) {}
-  InferShapeImpl(const InferShapeImpl &other) : m_graph(other.m_graph) {};
+  InferShapeImpl(const InferShapeImpl &other) : m_graph(other.m_graph) {}
   InferShapeImpl(InferShapeImpl&& other) noexcept : m_graph(std::move(other.m_graph)) {}
   InferShapeImpl& operator=(const InferShapeImpl &other) {
     if (this != &other) {
@@ -51,6 +51,7 @@ private:
   str_shape_map_t m_name_to_shape;
   std::unordered_map<std::string, struct AnalyzeData> m_name_to_anal_data;
   str_sz_map_t m_name_to_dtsize;
+  AnalyzeImpl m_analyzer;
 
   // TODO: more op types
   void infer_shapes_Conv(onnx::NodeProto &node);

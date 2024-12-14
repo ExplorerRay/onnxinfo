@@ -32,8 +32,10 @@ void InferShapeImpl::set_io_iniz_shape_to_map(bool analyze) {
     }
     this->m_name_to_shape[initializer.name()] = shape_vec;
 
-    // get dtype size
     if (analyze) {
+      this->m_analyzer.set_iniz_checked(initializer.name());
+
+      // get dtype size
       if (initializer.data_type() == 1) {
         this->m_name_to_dtsize[initializer.name()] = 4;
       }
@@ -55,6 +57,10 @@ void InferShapeImpl::set_io_iniz_shape_to_map(bool analyze) {
     if (analyze) {
       if (output.type().tensor_type().elem_type() == 1) {
         this->m_name_to_dtsize[output.name()] = 4;
+      }
+      else {
+        std::cerr << "Error: dtype not supported now\n";
+        exit(1);
       }
     }
   }
@@ -458,7 +464,8 @@ void InferShapeImpl::infer_shapes(bool analyze) {
     if (analyze) {
       // analyze node and store to ndname_to_anal_data
       this->m_name_to_anal_data[node.name()] =
-        analyze_node(node, this->m_name_to_shape, this->m_name_to_dtsize);
+        this->m_analyzer.analyze_node(
+          node, this->m_name_to_shape, this->m_name_to_dtsize);
     }
   }
 }
