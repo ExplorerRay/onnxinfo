@@ -87,14 +87,14 @@ void InferShapeImpl::print_summary() {
         << std::left << std::setw(TP_IND) << "Type"
         << std::left << std::setw(SP_IND) << "Input Shape"
         << std::left << std::setw(SP_IND) << "Output Shape"
-        << std::left << std::setw(DT_IND) << "MACs"
+        << std::left << std::setw(DT_IND) << "FLOPs"
         << std::left << std::setw(DT_IND) << "Params"
         << std::left << std::setw(DT_IND) << "Memory" << '\n';
     std::cout << std::string(TOTAL_IND, '-') << '\n';
 
     AnalyzeData total_data;
     for (auto node : m_graph.node()) {
-      total_data.mac += this->m_name_to_anal_data[node.name()].mac;
+      total_data.flop += this->m_name_to_anal_data[node.name()].flop;
       total_data.param += this->m_name_to_anal_data[node.name()].param;
       total_data.mem += this->m_name_to_anal_data[node.name()].mem;
 
@@ -103,7 +103,7 @@ void InferShapeImpl::print_summary() {
       std::cout << std::left << std::setw(TP_IND) << node.op_type();
       std::cout << std::setw(SP_IND) << dims_vec_to_str(this->m_name_to_shape[node.input(0)]);
       std::cout << std::setw(SP_IND) << dims_vec_to_str(this->m_name_to_shape[node.output(0)]);
-      std::cout << std::setw(DT_IND) << int64_to_str(this->m_name_to_anal_data[node.name()].mac);
+      std::cout << std::setw(DT_IND) << int64_to_str(this->m_name_to_anal_data[node.name()].flop);
       std::cout << std::setw(DT_IND) << int64_to_str(this->m_name_to_anal_data[node.name()].param);
       std::cout << std::setw(DT_IND) << int64_to_str(this->m_name_to_anal_data[node.name()].mem);
       std::cout << '\n';
@@ -112,7 +112,7 @@ void InferShapeImpl::print_summary() {
     std::cout << std::left << std::setw(TP_IND) << "-";
     std::cout << std::setw(SP_IND) << dims_vec_to_str(this->m_name_to_shape[m_graph.input(0).name()]);
     std::cout << std::setw(SP_IND) << dims_vec_to_str(this->m_name_to_shape[m_graph.output(0).name()]);
-    std::cout << std::setw(DT_IND) << int64_to_str(total_data.mac);
+    std::cout << std::setw(DT_IND) << int64_to_str(total_data.flop);
     std::cout << std::setw(DT_IND) << int64_to_str(total_data.param);
     std::cout << std::setw(DT_IND) << int64_to_str(total_data.mem);
     std::cout << '\n';

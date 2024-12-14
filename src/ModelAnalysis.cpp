@@ -40,10 +40,10 @@ AnalyzeData analyze_node_Conv(onnx::NodeProto &node, NodeAnalArgs &anal_args) {
   std::vector<int64_t> kernel_shape = input_shapes[1];
   std::vector<int64_t> reduce_shape(kernel_shape.begin() + 1, kernel_shape.end());
   int64_t out_prod = get_prod(output_shape);
-  data.mac = out_prod * get_prod(reduce_shape) * MUL_MACS;
+  data.flop = out_prod * get_prod(reduce_shape) * MUL_FLOPS;
 
   if (node.input_size() == 3) {  // with bias
-    data.mac += out_prod * ADD_MACS;
+    data.flop += out_prod * ADD_FLOPS;
   }
 
   // Parameters & Memory
@@ -64,7 +64,11 @@ AnalyzeData analyze_node_Relu(onnx::NodeProto &node, NodeAnalArgs &anal_args) {
   str_sz_map_t ndname_to_size = anal_args.ndname_to_size;
 
   data.param = 0;  // no trainable parameters
-  data.mac = 0;  // non MACs operation
+
+  // MACs
+  for (size_t i = 0; i < input_shapes.size(); ++i) {
+    data.flop += get_prod(input_shapes[i]) * CMP_FLOPS;
+  }
 
   // Memory
   for (size_t i = 0; i < input_shapes.size(); ++i) {
@@ -82,7 +86,15 @@ AnalyzeData analyze_node_MaxPool(onnx::NodeProto &node, NodeAnalArgs &anal_args)
   str_sz_map_t ndname_to_size = anal_args.ndname_to_size;
 
   // MACs
-  data.mac = 0;  // non MACs operation
+  std::vector<int64_t> kernel_shape;
+  for (auto attr : node.attribute()) {
+    if (attr.name() == "kernel_shape") {
+      for (int i = 0; i < attr.ints_size(); ++i) {
+        kernel_shape.emplace_back(attr.ints(i));
+      }
+    }
+  }
+  data.flop = get_prod(output_shape) * get_prod(kernel_shape) * CMP_FLOPS;
 
   // Parameters & Memory
   data.param = 0;  // no trainable parameters
@@ -101,9 +113,8 @@ AnalyzeData analyze_node_Add(onnx::NodeProto &node, NodeAnalArgs &anal_args) {
   str_sz_map_t ndname_to_size = anal_args.ndname_to_size;
 
   // MACs
-  for (size_t i = 0; i < input_shapes.size(); ++i) {
-    data.mac += get_prod(input_shapes[i]) * ADD_MACS;
-  }
+  data.flop += get_prod(output_shape) * ADD_FLOPS;
+
 
   // Parameters & Memory
   data.param = 0;  // no trainable parameters
@@ -123,9 +134,9 @@ AnalyzeData analyze_node_GlobalAveragePool(onnx::NodeProto &node, NodeAnalArgs &
 
   // MACs
   for (size_t i = 0; i < input_shapes.size(); ++i) {
-    data.mac += get_prod(input_shapes[i]) * ADD_MACS;
+    data.flop += get_prod(input_shapes[i]) * ADD_FLOPS;
   }
-  data.mac += get_prod(output_shape) * DIV_MACS;
+  data.flop += get_prod(output_shape) * DIV_FLOPS;
 
   // Parameters & Memory
   data.param = 0;  // no trainable parameters
@@ -144,7 +155,7 @@ AnalyzeData analyze_node_Flatten(onnx::NodeProto &node, NodeAnalArgs &anal_args)
   str_sz_map_t ndname_to_size = anal_args.ndname_to_size;
 
   // MACs
-  data.mac = 0;  // non MACs operation
+  data.flop = 0;  // non MACs operation
 
   // Parameters & Memory
   data.param = 0;  // no trainable parameters
@@ -163,7 +174,10 @@ AnalyzeData analyze_node_Gemm(onnx::NodeProto &node, NodeAnalArgs &anal_args) {
   str_sz_map_t ndname_to_size = anal_args.ndname_to_size;
 
   // MACs
-  data.mac = get_prod(input_shapes[0]) * get_prod(output_shape) * MUL_MACS;
+  data.flop = get_prod(input_shapes[0]) * get_prod(output_shape) * MUL_FLOPS;
+  if (node.input_size() == 3) {  // with bias
+    data.flop += get_prod(output_shape) * ADD_FLOPS;
+  }
 
   // Parameters & Memory
   data.param = get_prod(input_shapes[0]) * get_prod(output_shape) + get_prod(output_shape);
