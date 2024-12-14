@@ -5,13 +5,13 @@
 using str_sz_map_t = std::unordered_map<std::string, size_t>;
 using str_shape_map_t = std::unordered_map<std::string, std::vector<int64_t>>;
 
-constexpr int64_t MUL_MACS = 1;
-constexpr int64_t ADD_MACS = 1;
-// refers to onnx-tool/node.py
-constexpr int64_t DIV_MACS = 4;
+constexpr int64_t MUL_FLOPS = 1;
+constexpr int64_t ADD_FLOPS = 1;
+constexpr int64_t CMP_FLOPS = 1;
+constexpr int64_t DIV_FLOPS = 1;
 
 struct AnalyzeData {
-  int64_t mac = 0;
+  int64_t flop = 0;
   int64_t param = 0;
   int64_t mem = 0;
 };
