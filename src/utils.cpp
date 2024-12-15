@@ -21,27 +21,6 @@ onnx::ModelProto read_onnx(const std::string &filename) {
   return model;
 }
 
-void print_dim(const ::onnx::TensorShapeProto_Dimension &dim) {
-  switch (dim.value_case()) {
-    case onnx::TensorShapeProto_Dimension::ValueCase::kDimParam:
-      std::cout << dim.dim_param();
-      break;
-    case onnx::TensorShapeProto_Dimension::ValueCase::kDimValue:
-      std::cout << dim.dim_value();
-      break;
-    default:
-      assert(false && "should never happen this exception");
-  }
-}
-
-void print_dims_vec(const std::vector<int64_t> &dims) {
-  std::cout << "[";
-  for (size_t i = 0; i < dims.size() - 1; ++i) {
-    std::cout << dims[i] << ", ";
-  }
-  std::cout << dims.back() << "]";
-}
-
 std::string dims_vec_to_str(const std::vector<int64_t> &dims) {
   std::string str = "[";
   for (size_t i = 0; i < dims.size() - 1; ++i) {
