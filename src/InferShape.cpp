@@ -303,6 +303,65 @@ void InferShapeImpl::infer_shapes_Add(onnx::NodeProto &node) {
   this->m_name_to_dtsize[node.output(0)] = this->m_name_to_dtsize[node.input(0)];
 }
 
+void InferShapeImpl::infer_shapes_AveragePool(onnx::NodeProto &node) {
+  struct AttrInfo_MaxPool attr_info;
+
+  auto input_shape = this->m_name_to_shape[node.input(0)];
+
+  attr_info.set_default_attr(input_shape.size());
+  for (auto attr : node.attribute()) {
+    if (attr.name() == "kernel_shape") {  // required
+      for (int i = 0; i < attr.ints_size(); ++i) {
+        attr_info.kernel_shape.emplace_back(attr.ints(i));
+      }
+    }
+    else if (attr.name() == "strides") {
+      attr_info.strides.clear();
+      for (int i = 0; i < attr.ints_size(); ++i) {
+        attr_info.strides.emplace_back(attr.ints(i));
+      }
+    }
+    else if (attr.name() == "pads") {
+      attr_info.pads.clear();
+      for (int i = 0; i < attr.ints_size(); ++i) {
+        attr_info.pads.emplace_back(attr.ints(i));
+      }
+    }
+    else if (attr.name() == "ceil_mode") {
+      attr_info.ceil_mode = attr.i();
+    }
+    else if (attr.name() == "dilations") {
+      attr_info.dilations.clear();
+      for (int i = 0; i < attr.ints_size(); ++i) {
+        attr_info.dilations.emplace_back(attr.ints(i));
+      }
+    }
+  }
+
+  // calculate output shape after averagepool
+  std::vector<int64_t> output_shape;
+  output_shape.emplace_back(input_shape[0]);  // batch size
+  output_shape.emplace_back(input_shape[1]);  // number of channels
+  for (size_t i = 0; i < attr_info.kernel_shape.size(); ++i) {
+    int64_t pad = attr_info.pads[i];
+    int64_t dilation = attr_info.dilations[i];
+    int64_t kernel = attr_info.kernel_shape[i];
+    int64_t stride = attr_info.strides[i];
+
+    output_shape.emplace_back(
+      (input_shape[i + 2] + 2 * pad - dilation * (kernel - 1) - 1) / stride + 1
+    );
+  }
+
+  // set value_info and update ndname_to_shape
+  onnx::ValueInfoProto *val_info = this->m_graph.add_value_info();
+  val_info->set_name(node.name());
+  set_vec_to_shape(val_info, output_shape);
+
+  this->m_name_to_shape[node.output(0)] = output_shape;
+  this->m_name_to_dtsize[node.output(0)] = this->m_name_to_dtsize[node.input(0)];
+}
+
 void InferShapeImpl::infer_shapes_GlobalAveragePool(onnx::NodeProto &node) {
   // get node input shapes
   std::vector<std::vector<int64_t>> input_shapes;
@@ -443,6 +502,9 @@ void InferShapeImpl::infer_shapes(bool analyze) {
     }
     else if (node.op_type() == "MaxPool") {
       this->infer_shapes_MaxPool(node);
+    }
+    else if (node.op_type() == "AveragePool") {
+      this->infer_shapes_AveragePool(node);
     }
     else if (node.op_type() == "Add") {
       this->infer_shapes_Add(node);

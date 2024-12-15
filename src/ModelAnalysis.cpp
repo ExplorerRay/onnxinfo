@@ -103,6 +103,29 @@ AnalyzeData AnalyzeImpl::analyze_node_MaxPool(onnx::NodeProto &node, NodeAnalArg
   return data;
 }
 
+AnalyzeData AnalyzeImpl::analyze_node_AveragePool(onnx::NodeProto &node, NodeAnalArgs &anal_args) {
+  AnalyzeData data;
+  std::vector<std::vector<int64_t>> input_shapes = anal_args.input_shapes;
+  std::vector<int64_t> output_shape = anal_args.output_shape;
+  str_sz_map_t ndname_to_size = anal_args.ndname_to_size;
+
+  // MACs
+  std::vector<int64_t> kernel_shape;
+  for (auto attr : node.attribute()) {
+    if (attr.name() == "kernel_shape") {
+      for (int i = 0; i < attr.ints_size(); ++i) {
+        kernel_shape.emplace_back(attr.ints(i));
+      }
+    }
+  }
+  data.flop = get_prod(output_shape) * get_prod(kernel_shape) * CMP_FLOPS;
+
+  // Parameters
+  data.param = 0;  // no trainable parameters
+
+  return data;
+}
+
 AnalyzeData AnalyzeImpl::analyze_node_Add(onnx::NodeProto &node, NodeAnalArgs &anal_args) {
   AnalyzeData data;
   std::vector<std::vector<int64_t>> input_shapes = anal_args.input_shapes;
@@ -184,6 +207,9 @@ AnalyzeData AnalyzeImpl::analyze_node(onnx::NodeProto &node,
   }
   else if (node.op_type() == "MaxPool") {
     data = analyze_node_MaxPool(node, anal_args);
+  }
+  else if (node.op_type() == "AveragePool") {
+    data = analyze_node_AveragePool(node, anal_args);
   }
   else if (node.op_type() == "Add") {
     data = analyze_node_Add(node, anal_args);

@@ -22,6 +22,7 @@ public:
       this->m_name_to_shape = other.m_name_to_shape;
       this->m_name_to_anal_data = other.m_name_to_anal_data;
       this->m_name_to_dtsize = other.m_name_to_dtsize;
+      this->m_analyzer = other.m_analyzer;
     }
     return *this;
   }
@@ -31,6 +32,7 @@ public:
       this->m_name_to_shape = std::move(other.m_name_to_shape);
       this->m_name_to_anal_data = std::move(other.m_name_to_anal_data);
       this->m_name_to_dtsize = std::move(other.m_name_to_dtsize);
+      this->m_analyzer = std::move(other.m_analyzer);
     }
     return *this;
   }
@@ -58,6 +60,7 @@ private:
   void infer_shapes_Relu(onnx::NodeProto &node);
   void infer_shapes_MaxPool(onnx::NodeProto &node);
   void infer_shapes_Add(onnx::NodeProto &node);
+  void infer_shapes_AveragePool(onnx::NodeProto &node);
   void infer_shapes_GlobalAveragePool(onnx::NodeProto &node);
   void infer_shapes_Flatten(onnx::NodeProto &node);
   void infer_shapes_Gemm(onnx::NodeProto &node);

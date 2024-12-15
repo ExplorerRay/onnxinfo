@@ -22,11 +22,11 @@ onnxinfo.summary('<onnx model path>')
 
 ## Functions
 ### Shape Inference
-Support node types so far: Conv, Relu, MaxPool, Add, GlobalAveragePool, Flatten, Gemm
+Support node types so far: Conv, Relu, MaxPool, AveragePool, Add, GlobalAveragePool, Flatten, Gemm
 
 ### Static Analysis
 Will be run when shape inferencing by default.
-You can use `infer_shapes(analyze = false)` to run shape inference only.
+<!-- You can use `infer_shapes(analyze = false)` to run shape inference only. -->
 
 #### MACs
 Doesn't count for non MACs operations like `Relu`, `MaxPool` and so on.
@@ -34,8 +34,8 @@ Doesn't count for non MACs operations like `Relu`, `MaxPool` and so on.
 #### Parameters
 Calculate trainable parameters for each node.
 
-#### Memory
-Calculate the memory usage of each node when input and output. (Bytes)
+#### Memory (WIP)
+Aims to calculate the memory usage of each node when input and output. (Bytes)
 
 ## Test
 `python3 -m pytest -v`

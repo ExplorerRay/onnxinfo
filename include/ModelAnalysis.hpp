@@ -60,6 +60,7 @@ private:
   AnalyzeData analyze_node_Conv(onnx::NodeProto &node, NodeAnalArgs &anal_args);
   AnalyzeData analyze_node_Relu(onnx::NodeProto &node, NodeAnalArgs &anal_args);
   AnalyzeData analyze_node_MaxPool(onnx::NodeProto &node, NodeAnalArgs &anal_args);
+  AnalyzeData analyze_node_AveragePool(onnx::NodeProto &node, NodeAnalArgs &anal_args);
   AnalyzeData analyze_node_Add(onnx::NodeProto &node, NodeAnalArgs &anal_args);
   AnalyzeData analyze_node_GlobalAveragePool(onnx::NodeProto &node, NodeAnalArgs &anal_args);
   AnalyzeData analyze_node_Flatten(onnx::NodeProto &node, NodeAnalArgs &anal_args);
